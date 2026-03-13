@@ -25,6 +25,13 @@
             padding: 20px 40px;
             border-bottom: 1px solid #2a3f52;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            flex: 1;
         }
 
         .header h1 {
@@ -37,6 +44,106 @@
         .header-meta {
             font-size: 11px;
             color: #8899aa;
+        }
+
+        .conn-status {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .conn-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #2a3f52;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            color: #8899aa;
+            transition: all 0.3s ease;
+            cursor: default;
+            position: relative;
+        }
+
+        .conn-badge .conn-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .conn-badge.ok {
+            border-color: rgba(0,212,170,0.3);
+            color: #b0c4d8;
+        }
+
+        .conn-badge.ok .conn-dot {
+            background: #00d4aa;
+            box-shadow: 0 0 6px rgba(0,212,170,0.5);
+        }
+
+        .conn-badge.error {
+            border-color: rgba(255,82,82,0.4);
+            color: #ff8a80;
+            background: rgba(255,82,82,0.06);
+        }
+
+        .conn-badge.error .conn-dot {
+            background: #ff5252;
+            box-shadow: 0 0 8px rgba(255,82,82,0.6);
+            animation: pulse-red 1.5s infinite;
+        }
+
+        .conn-badge.checking .conn-dot {
+            background: #ffc107;
+            box-shadow: 0 0 6px rgba(255,193,7,0.4);
+            animation: pulse-yellow 1s infinite;
+        }
+
+        .conn-badge.checking {
+            border-color: rgba(255,193,7,0.3);
+            color: #8899aa;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        @keyframes pulse-yellow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .conn-badge .conn-tooltip {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a2733;
+            border: 1px solid #2a3f52;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 10px;
+            white-space: nowrap;
+            color: #b0c4d8;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            text-transform: none;
+            font-weight: 400;
+            letter-spacing: 0;
+        }
+
+        .conn-badge:hover .conn-tooltip {
+            display: block;
         }
 
         .container {
@@ -330,8 +437,28 @@
 </head>
 <body>
     <div class="header">
-        <h1>Sake Company - Analytics Dashboard v6</h1>
-        <div class="header-meta">Last updated: March 13, 2026 | Data includes 39 months (Jan 2023 - Mar 2026)</div>
+        <div class="header-left">
+            <h1>Sake Company - Analytics Dashboard v6</h1>
+            <div class="header-meta">Last updated: March 13, 2026 | Data includes 39 months (Jan 2023 - Mar 2026)</div>
+        </div>
+        <div class="conn-status" id="connStatus">
+            <div class="conn-badge checking" id="conn-shopify">
+                <span class="conn-dot"></span>Shopify
+                <span class="conn-tooltip">Verifica in corso...</span>
+            </div>
+            <div class="conn-badge checking" id="conn-airtable">
+                <span class="conn-dot"></span>Airtable
+                <span class="conn-tooltip">Verifica in corso...</span>
+            </div>
+            <div class="conn-badge checking" id="conn-scot">
+                <span class="conn-dot"></span>SCOT
+                <span class="conn-tooltip">Verifica in corso...</span>
+            </div>
+            <div class="conn-badge checking" id="conn-dropbox">
+                <span class="conn-dot"></span>Dropbox
+                <span class="conn-tooltip">Verifica in corso...</span>
+            </div>
+        </div>
     </div>
 
     <div class="container">
@@ -571,6 +698,91 @@
         let currentScotFilter = 'all';
         let charts = {};
 
+        // ===== CONNECTION HEALTH CHECK =====
+        function checkConnections() {
+            var connections = [
+                {
+                    id: 'conn-shopify',
+                    name: 'Shopify',
+                    check: function() {
+                        // Shopify is OK if we have KPI data with revenue > 0
+                        var hasData = dashboardData.kpi && dashboardData.kpi.total_revenue > 0;
+                        var monthCount = dashboardData.monthly ? dashboardData.monthly.length : 0;
+                        return {
+                            ok: hasData,
+                            detail: hasData
+                                ? monthCount + ' mesi dati | ' + dashboardData.products.filter(function(p){return p.in_shopify;}).length + ' prodotti attivi'
+                                : 'Nessun dato ricavi trovato'
+                        };
+                    }
+                },
+                {
+                    id: 'conn-airtable',
+                    name: 'Airtable',
+                    check: function() {
+                        // Airtable is OK if we have master_new products (from master_data.json cross-reference)
+                        var newProducts = dashboardData.products.filter(function(p){return p.status === 'NEW';});
+                        var hasImports = dashboardData.imports && dashboardData.imports.length > 0;
+                        return {
+                            ok: hasImports || newProducts.length > 0,
+                            detail: (hasImports || newProducts.length > 0)
+                                ? newProducts.length + ' nuovi SKU | ' + dashboardData.imports.length + ' importazioni'
+                                : 'Nessun dato Master List trovato'
+                        };
+                    }
+                },
+                {
+                    id: 'conn-scot',
+                    name: 'SCOT',
+                    check: function() {
+                        // SCOT is OK if we have scot_inventory data
+                        var scotCount = dashboardData.scot_inventory ? dashboardData.scot_inventory.length : 0;
+                        var totalStock = 0;
+                        if (dashboardData.scot_inventory) {
+                            dashboardData.scot_inventory.forEach(function(s) { totalStock += (s.stock || 0); });
+                        }
+                        return {
+                            ok: scotCount > 0,
+                            detail: scotCount > 0
+                                ? scotCount + ' SKU in magazzino | ' + totalStock.toLocaleString('it-IT') + ' pezzi'
+                                : 'Nessun dato inventario SCOT'
+                        };
+                    }
+                },
+                {
+                    id: 'conn-dropbox',
+                    name: 'Dropbox',
+                    check: function() {
+                        // Dropbox is OK if we have import container data with products
+                        var activeImports = dashboardData.imports ? dashboardData.imports.filter(function(i){
+                            return i.products && Object.keys(i.products).length > 0;
+                        }) : [];
+                        var totalBottles = 0;
+                        activeImports.forEach(function(i) {
+                            Object.values(i.products).forEach(function(q) { totalBottles += q; });
+                        });
+                        return {
+                            ok: activeImports.length > 0,
+                            detail: activeImports.length > 0
+                                ? activeImports.length + ' container attivi | ' + totalBottles.toLocaleString('it-IT') + ' bottiglie in arrivo'
+                                : 'Nessun dato container trovato'
+                        };
+                    }
+                }
+            ];
+
+            connections.forEach(function(conn) {
+                var el = document.getElementById(conn.id);
+                if (!el) return;
+                var result = conn.check();
+                el.className = 'conn-badge ' + (result.ok ? 'ok' : 'error');
+                var tooltip = el.querySelector('.conn-tooltip');
+                if (tooltip) {
+                    tooltip.textContent = result.detail;
+                }
+            });
+        }
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Dashboard loaded with', dashboardData.products.length, 'products');
@@ -580,6 +792,8 @@
             renderImports();
             renderScotTable();
             renderForecastTab();
+            // Check connection health after rendering
+            setTimeout(checkConnections, 300);
         });
 
         // Tab switching
