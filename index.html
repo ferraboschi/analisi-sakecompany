@@ -336,12 +336,12 @@
 
     <div class="container">
         <div class="tabs">
-            <button class="tab-button active" onclick="switchTab('overview')">Overview</button>
-            <button class="tab-button" onclick="switchTab('products')">Prodotti & Scorte</button>
-            <button class="tab-button" onclick="switchTab('sales')">Vendite</button>
-            <button class="tab-button" onclick="switchTab('imports')">Importazioni</button>
-            <button class="tab-button" onclick="switchTab('scot')">Giacenza SCOT</button>
-            <button class="tab-button" onclick="switchTab('forecast')">Previsioni</button>
+            <button class="tab-button active" onclick="switchTab('overview', this)">Overview</button>
+            <button class="tab-button" onclick="switchTab('products', this)">Prodotti & Scorte</button>
+            <button class="tab-button" onclick="switchTab('sales', this)">Vendite</button>
+            <button class="tab-button" onclick="switchTab('imports', this)">Importazioni</button>
+            <button class="tab-button" onclick="switchTab('scot', this)">Giacenza SCOT</button>
+            <button class="tab-button" onclick="switchTab('forecast', this)">Previsioni</button>
         </div>
 
         <!-- TAB 1: OVERVIEW -->
@@ -583,15 +583,16 @@
         });
 
         // Tab switching
-        function switchTab(tabName) {
+        function switchTab(tabName, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
 
             document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+            if (btn) btn.classList.add('active');
+            else if (event && event.target) event.target.classList.add('active');
 
             // Resize charts when switching to tabs with hidden charts
-            if (tabName === 'forecasts') {
+            if (tabName === 'forecast') {
                 setTimeout(function() {
                     if (charts.revenueProj) charts.revenueProj.resize();
                     if (charts.ordersProj) charts.ordersProj.resize();
