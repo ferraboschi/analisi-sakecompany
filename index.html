@@ -479,19 +479,19 @@
     <div class="container">
         <div class="tabs">
             <button class="tab-button active" onclick="switchTab(event, 'overview')">
-                \u25CB Overview
+                ○ Overview
             </button>
             <button class="tab-button" onclick="switchTab(event, 'products')">
-                \u25A0 Prodotti & Scorte
+                ■ Prodotti & Scorte
             </button>
             <button class="tab-button" onclick="switchTab(event, 'sales')">
-                \u25B2 Vendite
+                ▲ Vendite
             </button>
             <button class="tab-button" onclick="switchTab(event, 'imports')">
-                \u25A1 Importazioni
+                □ Importazioni
             </button>
             <button class="tab-button" onclick="switchTab(event, 'scot')">
-                \u2666 Giacenza SCOT
+                ♦ Giacenza SCOT
             </button>
         </div>
 
@@ -500,8 +500,8 @@
             <div class="kpi-grid">
                 <div class="kpi-card">
                     <h3>Ricavi 2026 YTD</h3>
-                    <div class="value">\u20AC331,678</div>
-                    <div class="subtext">2025: \u20AC1,707,949</div>
+                    <div class="value">€331,678</div>
+                    <div class="subtext">2025: €1,707,949</div>
                 </div>
                 <div class="kpi-card">
                     <h3>Ordini 2026 YTD</h3>
@@ -521,7 +521,7 @@
                 <div class="kpi-card">
                     <h3>Giacenza Live</h3>
                     <div class="value">34,726</div>
-                    <div class="subtext">unit\u00E0</div>
+                    <div class="subtext">unità</div>
                 </div>
             </div>
 
@@ -756,7 +756,7 @@
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: 'Ricavi (\u20AC)',
+                            label: 'Ricavi (€)',
                             data: revenue,
                             borderColor: '#27ae60',
                             backgroundColor: 'rgba(39, 174, 96, 0.1)',
@@ -787,7 +787,7 @@
                     data: {
                         labels: topProdNames,
                         datasets: [{
-                            label: 'Unit\u00E0 Vendute',
+                            label: 'Unità Vendute',
                             data: topProdQty,
                             backgroundColor: '#3498db',
                             borderColor: '#2980b9',
@@ -876,7 +876,7 @@
                     '<td>' + prod.sku + '</td>' +
                     '<td>' + prod.name + '</td>' +
                     '<td>' + (prod.type || '') + '</td>' +
-                    '<td>\u20AC' + prod.price.toFixed(2) + '</td>' +
+                    '<td>€' + prod.price.toFixed(2) + '</td>' +
                     '<td>' + prod.stock + '</td>' +
                     '<td>' + prod.avg_monthly.toFixed(0) + '</td>' +
                     '<td>' + coverage.toFixed(1) + ' m</td>' +
@@ -906,11 +906,11 @@
                     '<td>' + prod.sku + '</td>' +
                     '<td>' + prod.name + '</td>' +
                     '<td>' + prod.b2c + '</td>' +
-                    '<td>\u20AC' + prod.b2c_rev.toFixed(2) + '</td>' +
+                    '<td>€' + prod.b2c_rev.toFixed(2) + '</td>' +
                     '<td>' + prod.b2d + '</td>' +
-                    '<td>\u20AC' + prod.b2d_rev.toFixed(2) + '</td>' +
+                    '<td>€' + prod.b2d_rev.toFixed(2) + '</td>' +
                     '<td><strong>' + totalQty + '</strong></td>' +
-                    '<td><strong>\u20AC' + totalRev.toFixed(2) + '</strong></td>';
+                    '<td><strong>€' + totalRev.toFixed(2) + '</strong></td>';
 
                 tbody.appendChild(tr);
             });
@@ -932,8 +932,8 @@
             activeImports.forEach(function(imp) {
                 var html = '<div class="container-card">' +
                     '<h4>' + imp.name + '</h4>' +
-                    '<p>\u26A0 Status: <strong>' + imp.status.toUpperCase() + '</strong></p>' +
-                    '<p>\u2708 ETA: ' + imp.eta + '</p>';
+                    '<p>⚠ Status: <strong>' + imp.status.toUpperCase() + '</strong></p>' +
+                    '<p>✈ ETA: ' + imp.eta + '</p>';
 
                 if (imp.products_with_names && imp.products_with_names.length > 0) {
                     html += '<div class="product-list"><p style="font-weight: 600; margin-bottom: 8px;">Prodotti (' + imp.products_with_names.length + '):</p>';
@@ -1032,15 +1032,15 @@
                 '</div>' +
                 '<div class="modal-field">' +
                     '<label>Prezzo</label>' +
-                    '<value>\u20AC' + prod.price.toFixed(2) + '</value>' +
+                    '<value>€' + prod.price.toFixed(2) + '</value>' +
                 '</div>' +
                 '<div class="modal-field">' +
                     '<label>Giacenza Attuale</label>' +
-                    '<value>' + prod.stock + ' unit\u00E0</value>' +
+                    '<value>' + prod.stock + ' unità</value>' +
                 '</div>' +
                 '<div class="modal-field">' +
                     '<label>Medio Mensile</label>' +
-                    '<value>' + prod.avg_monthly.toFixed(1) + ' unit\u00E0</value>' +
+                    '<value>' + prod.avg_monthly.toFixed(1) + ' unità</value>' +
                 '</div>' +
                 '<div class="modal-field">' +
                     '<label>Copertura Giacenza</label>' +
@@ -1048,7 +1048,7 @@
                 '</div>' +
                 '<div class="modal-field">' +
                     '<label>Arrivi Totali</label>' +
-                    '<value>' + prod.incoming_qty + ' unit\u00E0</value>' +
+                    '<value>' + prod.incoming_qty + ' unità</value>' +
                     incomingBreakdown +
                 '</div>' +
                 '<div class="modal-field">' +
@@ -1057,19 +1057,19 @@
                 '</div>' +
                 '<div class="modal-field">' +
                     '<label>Vendite Totali</label>' +
-                    '<value>' + prod.total_sold + ' unit\u00E0</value>' +
+                    '<value>' + prod.total_sold + ' unità</value>' +
                 '</div>' +
                 '<div class="modal-field">' +
                     '<label>Ricavi Totali</label>' +
-                    '<value>\u20AC' + prod.total_revenue.toFixed(2) + '</value>' +
+                    '<value>€' + prod.total_revenue.toFixed(2) + '</value>' +
                 '</div>' +
                 '<div class="modal-field">' +
                     '<label>Vendite B2C</label>' +
-                    '<value>' + prod.b2c + ' unit\u00E0 (\u20AC' + prod.b2c_rev.toFixed(2) + ')</value>' +
+                    '<value>' + prod.b2c + ' unità (€' + prod.b2c_rev.toFixed(2) + ')</value>' +
                 '</div>' +
                 '<div class="modal-field">' +
                     '<label>Vendite B2D</label>' +
-                    '<value>' + prod.b2d + ' unit\u00E0 (\u20AC' + prod.b2d_rev.toFixed(2) + ')</value>' +
+                    '<value>' + prod.b2d + ' unità (€' + prod.b2d_rev.toFixed(2) + ')</value>' +
                 '</div>' +
                 '<div class="modal-field">' +
                     '<label>Status</label>' +
