@@ -186,8 +186,8 @@ var i06 = p.incoming_2025_06>0?'<span class="incoming-val" style="color:#ef4444"
 var i01 = p.incoming_2026_01>0?'<span class="incoming-val" style="color:#3b82f6">'+p.incoming_2026_01+'</span>':'<span style="color:#475569">\u2014</span>';
 var i02 = p.incoming_2026_02>0?'<span class="incoming-val" style="color:#22c55e">'+p.incoming_2026_02+'</span>':'<span style="color:#475569">\u2014</span>';
 var tot = p.incoming_total>0?'<span style="color:#22c55e;font-weight:600">'+p.incoming_total+'</span>':'\u2014';
-var cov = p.coverage_months.toFixed(1)+' mesi';
-var covArr = p.coverage_with_incoming>p.coverage_months?' <span class="coverage-arrow">\u2192 '+p.coverage_with_incoming.toFixed(1)+'</span>':'';
+var cov = (p.coverage_months||0).toFixed(1)+' mesi';
+var covArr = (p.coverage_with_incoming||0)>(p.coverage_months||0)?' <span class="coverage-arrow">\u2192 '+(p.coverage_with_incoming||0).toFixed(1)+'</span>':'';
 var statusClass = 'status-'+(isNew?'nuovo':p.status);
 var statusText = isNew?'NUOVO':p.status.toUpperCase();
 rows += '<tr'+rowStyle+' onclick="showProductModal(\''+p.sku+'\')" style="cursor:pointer"><td>'+p.sku+tag+'</td><td>'+p.name+'</td><td style="text-align:right;font-weight:600;color:'+(p.stock>0?'#22c55e':'#ef4444')+'">'+p.stock+'</td><td>'+Math.round(p.avg_monthly)+'/m</td><td>'+i06+'</td><td>'+i01+'</td><td>'+i02+'</td><td>'+tot+'</td><td>'+cov+covArr+'</td><td class="'+statusClass+'">'+statusText+'</td></tr>';
@@ -239,7 +239,7 @@ var incomingSection = p.incoming_total>0?
 '<h3 style="margin:20px 0 10px">\uD83D\uDCE6 Scorte in Arrivo \u2014 '+p.incoming_total+' bottiglie</h3>'+
 '<table><thead><tr><th>Container</th><th>Quantit\u00E0</th><th>Stato</th><th>ETA</th></tr></thead><tbody>'+containerRows+'</tbody></table>'+
 '<div class="grid g2" style="margin-top:16px"><div class="card"><div class="card-label">Stock + Arrivi</div><div class="card-value">'+(p.stock+p.incoming_total)+'</div></div>'+
-'<div class="card"><div class="card-label">Copertura con Arrivi</div><div class="card-value" style="color:#22c55e">'+p.coverage_with_incoming.toFixed(1)+' mesi</div></div></div>':'';
+'<div class="card"><div class="card-label">Copertura con Arrivi</div><div class="card-value" style="color:#22c55e">'+(p.coverage_with_incoming||0).toFixed(1)+' mesi</div></div></div>':'';
 
 var reorderSection = p.avg_monthly>0?
 '<h3 style="margin:20px 0 10px">\u2699 Analisi Riordino</h3>'+
@@ -257,7 +257,7 @@ modal.innerHTML = '<button class="close" onclick="closeModal()">\u2715</button>'
 '<div class="grid g3">'+
 '<div class="card"><div class="card-label">Giacenza SCOT</div><div class="card-value">'+p.stock+'</div></div>'+
 '<div class="card"><div class="card-label">Vendita Media</div><div class="card-value">'+(p.avg_monthly>0?Math.round(p.avg_monthly)+'/m':'\u2014')+'</div></div>'+
-'<div class="card"><div class="card-label">Copertura Attuale</div><div class="card-value" style="color:'+(p.coverage_months<2?'#ef4444':p.coverage_months<4?'#f97316':'#22c55e')+'">'+p.coverage_months.toFixed(1)+' mesi</div></div></div>'+
+'<div class="card"><div class="card-label">Copertura Attuale</div><div class="card-value" style="color:'+((p.coverage_months||0)<2?'#ef4444':(p.coverage_months||0)<4?'#f97316':'#22c55e')+'">'+(p.coverage_months||0).toFixed(1)+' mesi</div></div></div>'+
 incomingSection+reorderSection;
 
 document.getElementById('modalOverlay').classList.add('show');
