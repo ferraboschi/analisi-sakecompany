@@ -708,7 +708,7 @@
                         // Shopify is OK if we have KPI data with revenue > 0
                         var rev = dashboardData.kpi && (dashboardData.kpi.revenue_2026_ytd || dashboardData.kpi.revenue_2025 || dashboardData.kpi.total_revenue);
                         var hasData = rev > 0;
-                        var monthCount = dashboardData.monthly ? dashboardData.monthly.length : 0;
+                        var monthCount = dashboardData.monthly && dashboardData.monthly.labels ? dashboardData.monthly.labels.length : 0;
                         return {
                             ok: hasData,
                             detail: hasData
