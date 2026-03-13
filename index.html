@@ -583,7 +583,10 @@
                                 <th>Giacenza</th>
                                 <th>Medio Mese</th>
                                 <th>Copertura</th>
-                                <th>Arrivi</th>
+                                <th>Arr. 06/25</th>
+                                <th>Arr. 01/26</th>
+                                <th>Arr. 02/26</th>
+                                <th>Arr. Tot</th>
                                 <th>Stato</th>
                             </tr>
                         </thead>
@@ -880,7 +883,10 @@
                     '<td>' + prod.stock + '</td>' +
                     '<td>' + prod.avg_monthly.toFixed(0) + '</td>' +
                     '<td>' + coverage.toFixed(1) + ' m</td>' +
-                    '<td>' + prod.incoming_qty + '</td>' +
+                    '<td>' + (prod.incoming_2025_06 || 0) + '</td>' +
+                    '<td>' + (prod.incoming_2026_01 || 0) + '</td>' +
+                    '<td>' + (prod.incoming_2026_02 || 0) + '</td>' +
+                    '<td><strong>' + prod.incoming_qty + '</strong></td>' +
                     '<td>' + badge + '</td>';
 
                 tr.onclick = function() { openProductModal(prod); };
