@@ -1090,8 +1090,15 @@
             if (e.target === this) closeModal();
         });
 
-        // Initial render
-        setTimeout(initCharts, 200);
+        // Initial render - wait for Chart.js CDN to load
+        function waitForChartJS() {
+            if (typeof Chart !== 'undefined') {
+                initCharts();
+            } else {
+                setTimeout(waitForChartJS, 100);
+            }
+        }
+        waitForChartJS();
         renderProductsTable();
     </script>
 </body>
