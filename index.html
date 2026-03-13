@@ -261,14 +261,14 @@ function renderProducts(filter){
     const barPct=p.coverage_months!==null?Math.min(p.coverage_months/6*100,100):100;
     const barColor=statusColors[p.status]||'#2ecc71';
     
-    tbody.innerHTML+=\`<tr class="row-\${p.status}" style="cursor:pointer" onclick="showProductDetail('\${p.sku}')">
-      <td style="font-family:monospace;font-size:11px">\${p.sku}</td>
-      <td>\${p.name.substring(0,45)}</td>
-      <td style="font-weight:700">\${p.stock.toLocaleString('it')}</td>
-      <td>\${p.avg_monthly>0?p.avg_monthly.toFixed(0)+'/m':'—'}</td>
-      <td><div style="display:flex;align-items:center;gap:8px">\${coverText}<div class="coverage-bar"><div class="coverage-fill" style="width:\${barPct}%;background:\${barColor}"></div></div></div></td>
-      <td><span class="tag" style="background:\${barColor}22;color:\${barColor}">\${statusLabels[p.status]}</span></td>
-    </tr>\`;
+    tbody.innerHTML+=`<tr class="row-${p.status}" style="cursor:pointer" onclick="showProductDetail('${p.sku}')">
+      <td style="font-family:monospace;font-size:11px">${p.sku}</td>
+      <td>${p.name.substring(0,45)}</td>
+      <td style="font-weight:700">${p.stock.toLocaleString('it')}</td>
+      <td>${p.avg_monthly>0?p.avg_monthly.toFixed(0)+'/m':'—'}</td>
+      <td><div style="display:flex;align-items:center;gap:8px">${coverText}<div class="coverage-bar"><div class="coverage-fill" style="width:${barPct}%;background:${barColor}"></div></div></div></td>
+      <td><span class="tag" style="background:${barColor}22;color:${barColor}">${statusLabels[p.status]}</span></td>
+    </tr>`;
   });
 }
 renderProducts('all');
@@ -347,12 +347,12 @@ function renderShipments(){
     const sc=imp.status==='in_transit'?'status-transit':imp.status==='preparing'?'status-preparing':'status-arrived';
     const lb=imp.status==='in_transit'?'IN TRANSITO 🚢':imp.status==='preparing'?'IN PREPARAZIONE 📦':'ARRIVATO ✓';
     
-    const card=\`<div class="import-card" onclick="showImportDetail('\${imp.id}')">
+    const card=`<div class="import-card" onclick="showImportDetail('${imp.id}')">
       <div class="row">
-        <div><h4>\${imp.name}</h4><p>ETA: <strong>\${imp.eta}</strong>\${imp.dest?' · Destinazioni: '+imp.dest.join(', '):''}\${imp.etd?' · ETD: '+imp.etd:''}</p></div>
-        <span class="status-badge \${sc}">\${lb}</span>
+        <div><h4>${imp.name}</h4><p>ETA: <strong>${imp.eta}</strong>${imp.dest?' · Destinazioni: '+imp.dest.join(', '):''}${imp.etd?' · ETD: '+imp.etd:''}</p></div>
+        <span class="status-badge ${sc}">${lb}</span>
       </div>
-    </div>\`;
+    </div>`;
     
     if(isActive) active.innerHTML+=card;
     else completed.innerHTML+=card;
@@ -394,7 +394,7 @@ function showImportDetail(id){
     html+='<table><thead><tr><th>SKU</th><th>Prodotto</th><th>Stock</th><th>Vendita/m</th><th>Status</th></tr></thead><tbody>';
     urgentProducts.forEach(p=>{
       const sc2={esaurito:'#e74c3c',critico:'#e74c3c'}[p.status]||'#f39c12';
-      html+=\`<tr style="cursor:pointer" onclick="showProductDetail('\${p.sku}')"><td style="font-family:monospace">\${p.sku}</td><td>\${p.name.substring(0,40)}</td><td>\${p.stock}</td><td>\${p.avg_monthly>0?p.avg_monthly.toFixed(0):'—'}</td><td><span class="tag" style="background:\${sc2}22;color:\${sc2}">\${p.status.toUpperCase()}</span></td></tr>\`;
+      html+=`<tr style="cursor:pointer" onclick="showProductDetail('${p.sku}')"><td style="font-family:monospace">${p.sku}</td><td>${p.name.substring(0,40)}</td><td>${p.stock}</td><td>${p.avg_monthly>0?p.avg_monthly.toFixed(0):'—'}</td><td><span class="tag" style="background:${sc2}22;color:${sc2}">${p.status.toUpperCase()}</span></td></tr>`;
     });
     html+='</tbody></table>';
   }
