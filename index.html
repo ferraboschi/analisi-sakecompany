@@ -598,6 +598,18 @@
 
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
+
+            // Resize charts when switching to tabs with hidden charts
+            if (tabName === 'forecasts') {
+                setTimeout(function() {
+                    if (charts.revenueProj) charts.revenueProj.resize();
+                    if (charts.ordersProj) charts.ordersProj.resize();
+                }, 50);
+            } else if (tabName === 'overview') {
+                setTimeout(function() {
+                    Object.values(charts).forEach(function(c) { if (c && c.resize) c.resize(); });
+                }, 50);
+            }
         }
 
         // ===== OVERVIEW TAB =====
