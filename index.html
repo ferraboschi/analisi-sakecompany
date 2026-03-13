@@ -706,7 +706,8 @@
                     name: 'Shopify',
                     check: function() {
                         // Shopify is OK if we have KPI data with revenue > 0
-                        var hasData = dashboardData.kpi && dashboardData.kpi.total_revenue > 0;
+                        var rev = dashboardData.kpi && (dashboardData.kpi.revenue_2026_ytd || dashboardData.kpi.revenue_2025 || dashboardData.kpi.total_revenue);
+                        var hasData = rev > 0;
                         var monthCount = dashboardData.monthly ? dashboardData.monthly.length : 0;
                         return {
                             ok: hasData,
@@ -784,7 +785,7 @@
         }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        function initDashboard() {
             console.log('Dashboard loaded with', dashboardData.products.length, 'products');
             renderOverview();
             renderProductsTable();
@@ -794,7 +795,12 @@
             renderForecastTab();
             // Check connection health after rendering
             setTimeout(checkConnections, 300);
-        });
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initDashboard);
+        } else {
+            initDashboard();
+        }
 
         // Tab switching
         function switchTab(tabName, btn) {
