@@ -1606,7 +1606,7 @@
                     '<td>' + (p.type || '') + '</td>' +
                     '<td>' + (vol || '-') + '</td>' +
                     '<td>' + (bpc || '-') + '</td>' +
-                    '<td><input type="number" value="' + jpy + '" style="width:70px;padding:3px;background:#0f1923;border:1px solid #2a3f52;color:#e8e8e8;border-radius:3px;font-size:11px;text-align:right;" onchange="updateSupplierPrice('' + p.sku + '', this.value)"></td>' +
+                    '<td><input type="number" value="' + jpy + '" style="width:70px;padding:3px;background:#0f1923;border:1px solid #2a3f52;color:#e8e8e8;border-radius:3px;font-size:11px;text-align:right;" onchange="updateSupplierPrice(\'' + p.sku + '\', this.value)"></td>' +
                     '<td style="text-align:right;">' + (caseCostJpy > 0 ? '¥' + formatNum(caseCostJpy, 0) : '-') + '</td>' +
                     '<td style="text-align:right;">' + (costEur > 0 ? '€' + formatNum(costEur, 2) : '-') + '</td>' +
                     '<td>' + (wt || '-') + '</td>' +
