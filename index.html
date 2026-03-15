@@ -352,6 +352,27 @@
         .coverage-warning { color: #ffd93d; }
         .coverage-danger { color: #ff6b6b; }
 
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            white-space: nowrap;
+        }
+        th.sortable:hover {
+            color: #00d4aa;
+        }
+        th.sortable .sort-arrow {
+            display: inline-block;
+            margin-left: 3px;
+            font-size: 9px;
+            color: #556677;
+            vertical-align: middle;
+        }
+        th.sortable.sort-asc .sort-arrow,
+        th.sortable.sort-desc .sort-arrow {
+            color: #00d4aa;
+        }
+
         .channel-b2c { color: #00b4d8; font-weight: 600; }
         .channel-b2d { color: #6c5ce7; font-weight: 600; }
 
@@ -1161,18 +1182,18 @@
                 <table id="productsTable">
                     <thead>
                         <tr>
-                            <th>SKU</th>
-                            <th>Nome</th>
-                            <th>Tipo</th>
-                            <th>Prezzo</th>
-                            <th>Giacenza</th>
-                            <th>Med/Mese</th>
-                            <th>Copertura</th>
-                            <th>Arr.06/25</th>
-                            <th>Arr.01/26</th>
-                            <th>Arr.02/26</th>
-                            <th>Arr.Tot</th>
-                            <th>Stato</th>
+                            <th class="sortable" data-field="sku" onclick="handleSort('productsTable','sku','str',renderProductsTable)">SKU <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="name" onclick="handleSort('productsTable','name','str',renderProductsTable)">Nome <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="type" onclick="handleSort('productsTable','type','str',renderProductsTable)">Tipo <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="price" onclick="handleSort('productsTable','price','num',renderProductsTable)">Prezzo <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="stock" onclick="handleSort('productsTable','stock','num',renderProductsTable)">Giacenza <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="avg_monthly" onclick="handleSort('productsTable','avg_monthly','num',renderProductsTable)">Med/Mese <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="coverage" onclick="handleSort('productsTable','coverage','num',renderProductsTable)">Copertura <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="inc06" onclick="handleSort('productsTable','inc06','num',renderProductsTable)">Arr.06/25 <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="inc01" onclick="handleSort('productsTable','inc01','num',renderProductsTable)">Arr.01/26 <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="inc02" onclick="handleSort('productsTable','inc02','num',renderProductsTable)">Arr.02/26 <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="incTot" onclick="handleSort('productsTable','incTot','num',renderProductsTable)">Arr.Tot <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="status" onclick="handleSort('productsTable','status','str',renderProductsTable)">Stato <span class="sort-arrow">⇅</span></th>
                         </tr>
                     </thead>
                     <tbody id="productsBody"></tbody>
@@ -1209,15 +1230,15 @@
                 <table id="salesTable">
                     <thead>
                         <tr>
-                            <th>SKU</th>
-                            <th>Nome</th>
-                            <th>B2C Qty</th>
-                            <th>B2C Rev</th>
-                            <th>B2D Qty</th>
-                            <th>B2D Rev</th>
-                            <th>Tot Qty</th>
-                            <th>Tot Rev</th>
-                            <th>% B2D</th>
+                            <th class="sortable" data-field="sku" onclick="handleSort('salesTable','sku','str',renderSalesTable)">SKU <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="name" onclick="handleSort('salesTable','name','str',renderSalesTable)">Nome <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="b2c" onclick="handleSort('salesTable','b2c','num',renderSalesTable)">B2C Qty <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="b2c_rev" onclick="handleSort('salesTable','b2c_rev','num',renderSalesTable)">B2C Rev <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="b2d" onclick="handleSort('salesTable','b2d','num',renderSalesTable)">B2D Qty <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="b2d_rev" onclick="handleSort('salesTable','b2d_rev','num',renderSalesTable)">B2D Rev <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="totQty" onclick="handleSort('salesTable','totQty','num',renderSalesTable)">Tot Qty <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="totRev" onclick="handleSort('salesTable','totRev','num',renderSalesTable)">Tot Rev <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="b2dPct" onclick="handleSort('salesTable','b2dPct','num',renderSalesTable)">% B2D <span class="sort-arrow">⇅</span></th>
                         </tr>
                     </thead>
                     <tbody id="salesBody"></tbody>
@@ -1242,11 +1263,11 @@
                 <table id="scotTable">
                     <thead>
                         <tr>
-                            <th>SKU</th>
-                            <th>Nome</th>
-                            <th>Giacenza SCOT</th>
-                            <th>Tipo</th>
-                            <th>Status</th>
+                            <th class="sortable" data-field="sku" onclick="handleSort('scotTable','sku','str',renderScotTable)">SKU <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="name" onclick="handleSort('scotTable','name','str',renderScotTable)">Nome <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="qty" onclick="handleSort('scotTable','qty','num',renderScotTable)">Giacenza SCOT <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="type" onclick="handleSort('scotTable','type','str',renderScotTable)">Tipo <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="status" onclick="handleSort('scotTable','status','str',renderScotTable)">Status <span class="sort-arrow">⇅</span></th>
                         </tr>
                     </thead>
                     <tbody id="scotBody"></tbody>
@@ -1288,14 +1309,14 @@
                     <table id="depletionTable">
                         <thead>
                             <tr>
-                                <th>SKU</th>
-                                <th>Nome</th>
-                                <th>Stock</th>
-                                <th>Med/Mese</th>
-                                <th>Giorni Rimanenti</th>
-                                <th>Data Esaurimento</th>
-                                <th>Arrivi Previsti</th>
-                                <th>Giorni Dopo Arrivi</th>
+                                <th class="sortable" data-field="sku" onclick="handleSort('depletionTable','sku','str',renderDepletionTable)">SKU <span class="sort-arrow">⇅</span></th>
+                                <th class="sortable" data-field="name" onclick="handleSort('depletionTable','name','str',renderDepletionTable)">Nome <span class="sort-arrow">⇅</span></th>
+                                <th class="sortable" data-field="stock" onclick="handleSort('depletionTable','stock','num',renderDepletionTable)">Stock <span class="sort-arrow">⇅</span></th>
+                                <th class="sortable" data-field="avg" onclick="handleSort('depletionTable','avg','num',renderDepletionTable)">Med/Mese <span class="sort-arrow">⇅</span></th>
+                                <th class="sortable" data-field="days" onclick="handleSort('depletionTable','days','num',renderDepletionTable)">Giorni Rimanenti <span class="sort-arrow">⇅</span></th>
+                                <th class="sortable" data-field="date" onclick="handleSort('depletionTable','date','str',renderDepletionTable)">Data Esaurimento <span class="sort-arrow">⇅</span></th>
+                                <th class="sortable" data-field="incoming" onclick="handleSort('depletionTable','incoming','num',renderDepletionTable)">Arrivi Previsti <span class="sort-arrow">⇅</span></th>
+                                <th class="sortable" data-field="daysAfter" onclick="handleSort('depletionTable','daysAfter','num',renderDepletionTable)">Giorni Dopo Arrivi <span class="sort-arrow">⇅</span></th>
                             </tr>
                         </thead>
                         <tbody id="depletionBody"></tbody>
@@ -1350,19 +1371,19 @@
                     <thead>
                         <tr>
                             <th style="width: 30px;">☑</th>
-                            <th style="width: 80px;">SKU</th>
-                            <th style="width: 150px;">Nome Prodotto</th>
-                            <th style="width: 90px;">Tipo</th>
-                            <th style="width: 80px;">Prezzo (€)</th>
-                            <th style="width: 80px;">Stock Att.</th>
-                            <th style="width: 80px;">Med/Mese</th>
-                            <th style="width: 90px;">Copertura Att.</th>
-                            <th style="width: 80px;">In Arrivo</th>
-                            <th style="width: 90px;">Copertura Proj.</th>
-                            <th style="width: 100px;">Qty Suggerita</th>
+                            <th class="sortable" data-field="sku" style="width: 80px;" onclick="handleSort('orderTable','sku','str',renderOrderTable)">SKU <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="name" style="width: 150px;" onclick="handleSort('orderTable','name','str',renderOrderTable)">Nome Prodotto <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="type" style="width: 90px;" onclick="handleSort('orderTable','type','str',renderOrderTable)">Tipo <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="price" style="width: 80px;" onclick="handleSort('orderTable','price','num',renderOrderTable)">Prezzo (€) <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="stock" style="width: 80px;" onclick="handleSort('orderTable','stock','num',renderOrderTable)">Stock Att. <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="avg" style="width: 80px;" onclick="handleSort('orderTable','avg','num',renderOrderTable)">Med/Mese <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="covAtt" style="width: 90px;" onclick="handleSort('orderTable','covAtt','num',renderOrderTable)">Copertura Att. <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="incoming" style="width: 80px;" onclick="handleSort('orderTable','incoming','num',renderOrderTable)">In Arrivo <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="covProj" style="width: 90px;" onclick="handleSort('orderTable','covProj','num',renderOrderTable)">Copertura Proj. <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="suggested" style="width: 100px;" onclick="handleSort('orderTable','suggested','num',renderOrderTable)">Qty Suggerita <span class="sort-arrow">⇅</span></th>
                             <th style="width: 80px;">Qty Ordine</th>
-                            <th style="width: 100px;">Valore Riga (€)</th>
-                            <th style="width: 100px;">Dopo Ordine</th>
+                            <th class="sortable" data-field="lineVal" style="width: 100px;" onclick="handleSort('orderTable','lineVal','num',renderOrderTable)">Valore Riga (€) <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="covAfter" style="width: 100px;" onclick="handleSort('orderTable','covAfter','num',renderOrderTable)">Dopo Ordine <span class="sort-arrow">⇅</span></th>
                         </tr>
                     </thead>
                     <tbody id="orderTableBody">
@@ -1387,20 +1408,20 @@
                 </div>
             </div>
             <div style="overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 280px);">
-                <table class="order-table" style="width: 100%;">
+                <table id="supplierTable" class="order-table" style="width: 100%;">
                     <thead style="position: sticky; top: 0;">
                         <tr>
-                            <th style="width: 80px;">SKU</th>
-                            <th style="width: 120px;">商品名</th>
-                            <th style="width: 150px;">English Name</th>
-                            <th style="width: 90px;">種類</th>
-                            <th style="width: 80px;">容量 ml</th>
-                            <th style="width: 100px;">ケース入数</th>
-                            <th style="width: 110px;">仕入単価 ¥</th>
-                            <th style="width: 110px;">ケース単価 ¥</th>
-                            <th style="width: 110px;">仕入単価 €</th>
-                            <th style="width: 90px;">重量 kg</th>
-                            <th style="width: 80px;">アルコール %</th>
+                            <th class="sortable" data-field="sku" style="width: 80px;" onclick="handleSort('supplierTable','sku','str',renderSupplierTable)">SKU <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="name_jp" style="width: 120px;" onclick="handleSort('supplierTable','name_jp','str',renderSupplierTable)">商品名 <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="name" style="width: 150px;" onclick="handleSort('supplierTable','name','str',renderSupplierTable)">English Name <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="type" style="width: 90px;" onclick="handleSort('supplierTable','type','str',renderSupplierTable)">種類 <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="vol" style="width: 80px;" onclick="handleSort('supplierTable','vol','num',renderSupplierTable)">容量 ml <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="bpc" style="width: 100px;" onclick="handleSort('supplierTable','bpc','num',renderSupplierTable)">ケース入数 <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="jpy" style="width: 110px;" onclick="handleSort('supplierTable','jpy','num',renderSupplierTable)">仕入単価 ¥ <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="caseJpy" style="width: 110px;" onclick="handleSort('supplierTable','caseJpy','num',renderSupplierTable)">ケース単価 ¥ <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="eur" style="width: 110px;" onclick="handleSort('supplierTable','eur','num',renderSupplierTable)">仕入単価 € <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="wt" style="width: 90px;" onclick="handleSort('supplierTable','wt','num',renderSupplierTable)">重量 kg <span class="sort-arrow">⇅</span></th>
+                            <th class="sortable" data-field="alc" style="width: 80px;" onclick="handleSort('supplierTable','alc','num',renderSupplierTable)">アルコール % <span class="sort-arrow">⇅</span></th>
                         </tr>
                     </thead>
                     <tbody id="supplierTableBody">
@@ -1554,6 +1575,53 @@
             return sign + Number(n).toFixed(1) + '%';
         }
 
+        // ===== COLUMN SORTING =====
+        var sortState = {};
+
+        function handleSort(tableId, field, type, renderFn) {
+            if (!sortState[tableId]) sortState[tableId] = { field: null, dir: 'asc' };
+            if (sortState[tableId].field === field) {
+                sortState[tableId].dir = sortState[tableId].dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState[tableId].field = field;
+                sortState[tableId].dir = 'asc';
+            }
+            // Update header arrows
+            var table = document.getElementById(tableId);
+            if (table) {
+                table.querySelectorAll('th.sortable').forEach(function(th) {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                    var arrow = th.querySelector('.sort-arrow');
+                    if (arrow) arrow.textContent = '⇅';
+                });
+                var activeTh = table.querySelector('th[data-field="' + field + '"]');
+                if (activeTh) {
+                    activeTh.classList.add(sortState[tableId].dir === 'asc' ? 'sort-asc' : 'sort-desc');
+                    var arrow = activeTh.querySelector('.sort-arrow');
+                    if (arrow) arrow.textContent = sortState[tableId].dir === 'asc' ? '▲' : '▼';
+                }
+            }
+            // Re-render
+            if (typeof renderFn === 'function') renderFn();
+            else if (typeof window[renderFn] === 'function') window[renderFn]();
+        }
+
+        function applySortToArray(arr, tableId, accessors) {
+            var st = sortState[tableId];
+            if (!st || !st.field || !accessors[st.field]) return arr;
+            var fn = accessors[st.field];
+            var dir = st.dir;
+            return arr.slice().sort(function(a, b) {
+                var va = fn(a), vb = fn(b);
+                if (typeof va === 'number' && typeof vb === 'number') {
+                    return dir === 'asc' ? va - vb : vb - va;
+                }
+                va = (va || '').toString().toLowerCase();
+                vb = (vb || '').toString().toLowerCase();
+                return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+            });
+        }
+
         // Initialize on page load
         function initDashboard() {
             console.log('Dashboard loaded with', dashboardData.products.length, 'products');
@@ -1585,8 +1653,34 @@
             var searchQuery = (document.getElementById('supplierSearch').value || '').toLowerCase();
             var tbody = document.getElementById('supplierTableBody');
             tbody.innerHTML = '';
-            
-            dashboardData.products.forEach(function(p) {
+
+            var filtered = dashboardData.products.filter(function(p) {
+                if (!searchQuery) return true;
+                var info = supplierInfo[p.sku] || {};
+                return p.sku.toLowerCase().includes(searchQuery) ||
+                    p.name.toLowerCase().includes(searchQuery) ||
+                    (info.name_jp || '').includes(searchQuery) ||
+                    (p.type || '').toLowerCase().includes(searchQuery);
+            });
+
+            var suppAccessors = {
+                sku: function(p) { return p.sku; },
+                name_jp: function(p) { return (supplierInfo[p.sku] || {}).name_jp || ''; },
+                name: function(p) { return p.name; },
+                type: function(p) { return p.type || ''; },
+                vol: function(p) { return (supplierInfo[p.sku] || {}).volume_ml || 0; },
+                bpc: function(p) { return (supplierInfo[p.sku] || {}).bottles_per_case || 0; },
+                jpy: function(p) { return (supplierInfo[p.sku] || {}).price_jpy || 0; },
+                caseJpy: function(p) { var i = supplierInfo[p.sku] || {}; return (i.price_jpy||0) * (i.bottles_per_case||0); },
+                eur: function(p) { return ((supplierInfo[p.sku] || {}).price_jpy || 0) * exchangeRate; },
+                wt: function(p) { return (supplierInfo[p.sku] || {}).weight_kg || 0; },
+                alc: function(p) { return parseFloat((supplierInfo[p.sku] || {}).alcohol_pct) || 0; }
+            };
+            if (sortState['supplierTable'] && sortState['supplierTable'].field) {
+                filtered = applySortToArray(filtered, 'supplierTable', suppAccessors);
+            }
+
+            filtered.forEach(function(p) {
                 var info = supplierInfo[p.sku] || {};
                 var name_jp = info.name_jp || '';
                 var bpc = info.bottles_per_case || 0;
@@ -1594,21 +1688,12 @@
                 var vol = info.volume_ml || 0;
                 var wt = info.weight_kg || 0;
                 var alc = info.alcohol_pct || '';
-                
-                // Search filter
-                if (searchQuery && 
-                    !p.sku.toLowerCase().includes(searchQuery) && 
-                    !p.name.toLowerCase().includes(searchQuery) && 
-                    !name_jp.includes(searchQuery) &&
-                    !(p.type || '').toLowerCase().includes(searchQuery)) {
-                    return;
-                }
-                
+
                 var caseCostJpy = jpy * bpc;
                 var costEur = jpy * exchangeRate;
-                
+
                 var tr = document.createElement('tr');
-                tr.innerHTML = 
+                tr.innerHTML =
                     '<td>' + p.sku + '</td>' +
                     '<td>' + name_jp + '</td>' +
                     '<td>' + p.name + '</td>' +
@@ -2646,6 +2731,23 @@
                 );
             }
 
+            var productAccessors = {
+                sku: function(p) { return p.sku; },
+                name: function(p) { return p.name; },
+                type: function(p) { return p.type || ''; },
+                price: function(p) { return p.price || 0; },
+                stock: function(p) { return p.stock || 0; },
+                avg_monthly: function(p) { return p.avg_monthly || 0; },
+                coverage: function(p) { return p.coverage_months || 0; },
+                inc06: function(p) { return p.incoming_2025_06 || 0; },
+                inc01: function(p) { return p.incoming_2026_01 || 0; },
+                inc02: function(p) { return p.incoming_2026_02 || 0; },
+                incTot: function(p) { return p.incoming_total || 0; },
+                status: function(p) { return p.status || ''; }
+            };
+            if (sortState['productsTable'] && sortState['productsTable'].field) {
+                return applySortToArray(products, 'productsTable', productAccessors);
+            }
             return products.sort((a, b) => a.sku.localeCompare(b.sku));
         }
 
@@ -2714,6 +2816,20 @@
                 products = products.filter(p => (p.b2d || 0) > 0);
             }
 
+            var salesAccessors = {
+                sku: function(p) { return p.sku; },
+                name: function(p) { return p.name; },
+                b2c: function(p) { return p.b2c || 0; },
+                b2c_rev: function(p) { return p.b2c_rev || 0; },
+                b2d: function(p) { return p.b2d || 0; },
+                b2d_rev: function(p) { return p.b2d_rev || 0; },
+                totQty: function(p) { return (p.b2c || 0) + (p.b2d || 0); },
+                totRev: function(p) { return (p.b2c_rev || 0) + (p.b2d_rev || 0); },
+                b2dPct: function(p) { var t = (p.b2c_rev||0)+(p.b2d_rev||0); return t > 0 ? (p.b2d_rev||0)/t*100 : 0; }
+            };
+            if (sortState['salesTable'] && sortState['salesTable'].field) {
+                return applySortToArray(products, 'salesTable', salesAccessors);
+            }
             return products.sort((a, b) => {
                 const aRev = (a.b2c_rev || 0) + (a.b2d_rev || 0);
                 const bRev = (b.b2c_rev || 0) + (b.b2d_rev || 0);
@@ -2957,6 +3073,16 @@
                 items = items.filter(i => i.qty === 0);
             }
 
+            var scotAccessors = {
+                sku: function(i) { return i.sku; },
+                name: function(i) { return i.name; },
+                qty: function(i) { return i.qty || 0; },
+                type: function(i) { var p = dashboardData.products.find(function(x){return x.sku===i.sku;}); return p ? p.type : ''; },
+                status: function(i) { var p = dashboardData.products.find(function(x){return x.sku===i.sku;}); return p ? p.status : ''; }
+            };
+            if (sortState['scotTable'] && sortState['scotTable'].field) {
+                return applySortToArray(items, 'scotTable', scotAccessors);
+            }
             return items;
         }
 
@@ -3094,8 +3220,25 @@
             });
         }
 
+        function renderDepletionTable() {
+            renderDepletionForecast();
+        }
+
         function renderDepletionForecast() {
-            const forecast = dashboardData.forecast_depletion;
+            var forecast = dashboardData.forecast_depletion.slice();
+            var depAccessors = {
+                sku: function(i) { return i.sku; },
+                name: function(i) { return i.name; },
+                stock: function(i) { return i.stock || 0; },
+                avg: function(i) { return i.avg_monthly || 0; },
+                days: function(i) { return parseInt(i.days_remaining) || 0; },
+                date: function(i) { return i.depletion_date || ''; },
+                incoming: function(i) { return i.incoming || 0; },
+                daysAfter: function(i) { return parseInt(i.days_after) || 0; }
+            };
+            if (sortState['depletionTable'] && sortState['depletionTable'].field) {
+                forecast = applySortToArray(forecast, 'depletionTable', depAccessors);
+            }
             const tbody = document.getElementById('depletionBody');
             tbody.innerHTML = forecast.map(item => `
                 <tr>
@@ -3375,13 +3518,31 @@
             tbody.innerHTML = '';
 
             const targetDate = getTargetDate();
-            const filteredRows = orderState.rows.filter(row => {
+            var filteredRows = orderState.rows.filter(row => {
                 if (orderState.filter === 'all') return true;
                 if (orderState.filter === 'suggested') return orderState.productSource[row.sku] === 'suggested';
                 if (orderState.filter === 'critical') return row.projected_coverage < 1;
                 if (orderState.filter === 'manual') return orderState.productSource[row.sku] === 'manual';
                 return true;
             });
+
+            var orderAccessors = {
+                sku: function(r) { return r.sku; },
+                name: function(r) { return r.name; },
+                type: function(r) { return r.type || ''; },
+                price: function(r) { return r.price || 0; },
+                stock: function(r) { return r.stock || 0; },
+                avg: function(r) { return r.avg_monthly || 0; },
+                covAtt: function(r) { return r.avg_monthly > 0 ? r.stock / r.avg_monthly : 0; },
+                incoming: function(r) { return r.incoming || 0; },
+                covProj: function(r) { return r.projected_coverage || 0; },
+                suggested: function(r) { return r.suggested_qty || 0; },
+                lineVal: function(r) { return (r.ordered_qty || r.suggested_qty || 0) * r.price; },
+                covAfter: function(r) { var q = r.ordered_qty || r.suggested_qty || 0; return r.avg_monthly > 0 ? (r.stock + r.incoming + q) / r.avg_monthly : 0; }
+            };
+            if (sortState['orderTable'] && sortState['orderTable'].field) {
+                filteredRows = applySortToArray(filteredRows, 'orderTable', orderAccessors);
+            }
 
             filteredRows.forEach((row, idx) => {
                 const orderedQty = row.ordered_qty || row.suggested_qty || 0;
