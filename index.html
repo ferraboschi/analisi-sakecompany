@@ -1319,6 +1319,7 @@
             <div class="order-actions-bar">
                 <button class="order-btn primary" onclick="generateAutoProposal()">Genera Proposta Automatica</button>
                 <button class="order-btn" onclick="addProductRow()">Aggiungi Prodotto</button>
+                <button class="order-btn" onclick="deleteSelectedRows()" style="color:#ff6b6b;border-color:#ff6b6b;">Elimina Selezionati</button>
                 <button class="order-btn" onclick="downloadOrderXLS()">Scarica XLS</button>
                 <button class="order-btn" onclick="saveDraft()">Salva Bozza</button>
                 <button class="order-btn" onclick="loadDraft()">Carica Bozza</button>
@@ -3098,56 +3099,84 @@
         }
 
         function addProductRow() {
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = 'Digita SKU o nome prodotto...';
-            input.style.cssText = 'padding: 8px; background: #0f1923; border: 1px solid #2a3f52; color: #e8e8e8; border-radius: 4px; width: 300px;';
-
-            const dropdown = document.createElement('div');
-            dropdown.className = 'dropdown-content';
-
-            input.onkeyup = function(e) {
-                const query = e.target.value.toLowerCase();
-                dropdown.innerHTML = '';
-
-                if (query.length === 0) {
-                    dropdown.classList.remove('show');
-                    return;
-                }
-
-                const matches = dashboardData.products.filter(p =>
-                    p.sku.toLowerCase().includes(query) || p.name.toLowerCase().includes(query)
-                ).slice(0, 10);
-
-                if (matches.length === 0) {
-                    dropdown.classList.remove('show');
-                    return;
-                }
-
-                matches.forEach(product => {
-                    const item = document.createElement('div');
-                    item.className = 'dropdown-item';
-                    item.innerHTML = `<div class="dropdown-item-sku">${product.sku}</div><div class="dropdown-item-name">${product.name}</div>`;
-                    item.onclick = function() {
-                        addProductToOrder(product);
-                        input.remove();
-                        dropdown.remove();
-                    };
-                    dropdown.appendChild(item);
-                });
-
-                dropdown.classList.add('show');
+            var tempSku = 'NEW-' + Date.now();
+            var row = {
+                sku: '',
+                name: '',
+                type: '',
+                price: 0,
+                stock: 0,
+                avg_monthly: 0,
+                incoming: 0,
+                projected_coverage: 0,
+                suggested_qty: 0,
+                ordered_qty: 0,
+                source: 'manual',
+                isNew: true
             };
+            orderState.rows.push(row);
+            orderState.productSource[tempSku] = 'manual';
 
-            const tempDiv = document.createElement('div');
-            tempDiv.style.cssText = 'display: flex; gap: 8px; margin-bottom: 10px; padding: 10px; background: #1a2733; border-radius: 6px;';
-            tempDiv.appendChild(input);
+            var tbody = document.getElementById('orderTableBody');
+            var tr = document.createElement('tr');
+            tr.setAttribute('data-sku', tempSku);
+            tr.setAttribute('data-new-row', 'true');
+            tr.innerHTML =
+                '<td><input type="checkbox" onchange="updateOrderSelection()"></td>' +
+                '<td><input type="text" placeholder="SKU" style="width:70px;padding:4px;background:#0f1923;border:1px solid #2a3f52;color:#e8e8e8;border-radius:3px;font-size:11px;" onchange="updateNewRowField(this,\'sku\')"></td>' +
+                '<td><input type="text" placeholder="Nome prodotto" style="width:130px;padding:4px;background:#0f1923;border:1px solid #2a3f52;color:#e8e8e8;border-radius:3px;font-size:11px;" onchange="updateNewRowField(this,\'name\')"></td>' +
+                '<td><input type="text" placeholder="Tipo" style="width:70px;padding:4px;background:#0f1923;border:1px solid #2a3f52;color:#e8e8e8;border-radius:3px;font-size:11px;" onchange="updateNewRowField(this,\'type\')"></td>' +
+                '<td><input type="number" placeholder="0" style="width:60px;padding:4px;background:#0f1923;border:1px solid #2a3f52;color:#e8e8e8;border-radius:3px;font-size:11px;" onchange="updateNewRowField(this,\'price\')"></td>' +
+                '<td>0</td>' +
+                '<td>0</td>' +
+                '<td><span class="coverage-cell">-</span></td>' +
+                '<td>0</td>' +
+                '<td><span class="coverage-cell">-</span></td>' +
+                '<td>-</td>' +
+                '<td><input type="number" value="0" min="0" step="1" onchange="updateNewRowField(this,\'ordered_qty\')"></td>' +
+                '<td class="new-row-value">€0,00</td>' +
+                '<td>-</td>';
+            tbody.appendChild(tr);
 
-            const wrapper = document.querySelector('.order-actions-bar');
-            wrapper.parentElement.insertBefore(tempDiv, wrapper.nextElementSibling);
-            wrapper.parentElement.insertBefore(dropdown, tempDiv.nextElementSibling);
+            // Focus the SKU field
+            tr.querySelector('input[type="text"]').focus();
+        }
 
-            input.focus();
+        function updateNewRowField(input, field) {
+            var tr = input.closest('tr');
+            var idx = orderState.rows.length - 1;
+            // Find the row by checking for isNew
+            for (var i = orderState.rows.length - 1; i >= 0; i--) {
+                if (orderState.rows[i].isNew) {
+                    idx = i;
+                    break;
+                }
+            }
+            var row = orderState.rows[idx];
+            if (!row) return;
+
+            if (field === 'price' || field === 'ordered_qty') {
+                row[field] = parseFloat(input.value) || 0;
+            } else {
+                row[field] = input.value;
+            }
+
+            // Update SKU on the TR
+            if (field === 'sku') {
+                var oldSku = tr.getAttribute('data-sku');
+                delete orderState.productSource[oldSku];
+                tr.setAttribute('data-sku', row.sku);
+                orderState.productSource[row.sku] = 'manual';
+            }
+
+            // Update line value display
+            var lineValue = (row.price || 0) * (row.ordered_qty || 0);
+            var valueCell = tr.querySelector('.new-row-value');
+            if (valueCell) {
+                valueCell.textContent = '€' + formatNum(lineValue, 2);
+            }
+
+            updateSummary();
         }
 
         function addProductToOrder(product) {
@@ -3235,6 +3264,31 @@
             if (months < 3) return 'warning';
             if (months < 6) return 'caution';
             return 'good';
+        }
+
+        function deleteSelectedRows() {
+            var checkboxes = document.querySelectorAll('#orderTableBody input[type="checkbox"]');
+            var skusToRemove = [];
+            checkboxes.forEach(function(cb, idx) {
+                if (cb.checked) {
+                    var tr = cb.closest('tr');
+                    if (tr) {
+                        var sku = tr.getAttribute('data-sku');
+                        if (sku) skusToRemove.push(sku);
+                    }
+                }
+            });
+            if (skusToRemove.length === 0) {
+                alert('Seleziona almeno un prodotto da eliminare');
+                return;
+            }
+            orderState.rows = orderState.rows.filter(function(r) {
+                return skusToRemove.indexOf(r.sku) === -1;
+            });
+            skusToRemove.forEach(function(sku) {
+                delete orderState.productSource[sku];
+            });
+            renderOrderTable();
         }
 
         function updateOrderSelection() {
