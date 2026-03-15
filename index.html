@@ -1391,6 +1391,19 @@
             });
         }
 
+        // Utility formatting functions
+        function formatNum(n, decimals) {
+            if (n === undefined || n === null || isNaN(n)) return '0';
+            decimals = decimals !== undefined ? decimals : 0;
+            return Number(n).toLocaleString('it-IT', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        }
+
+        function formatPct(n) {
+            if (n === undefined || n === null || isNaN(n)) return '0%';
+            var sign = n > 0 ? '+' : '';
+            return sign + Number(n).toFixed(1) + '%';
+        }
+
         // Initialize on page load
         function initDashboard() {
             console.log('Dashboard loaded with', dashboardData.products.length, 'products');
