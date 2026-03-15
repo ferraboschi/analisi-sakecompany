@@ -197,18 +197,37 @@
             to { opacity: 1; }
         }
 
+        /* Overview specific layout */
+        #overview {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 120px);
+            overflow: hidden;
+        }
+
+        #overview .kpi-row {
+            flex-shrink: 0;
+        }
+
+        #overview .chart-row {
+            flex: 1;
+            min-height: 0;
+            margin-bottom: 0;
+        }
+
         .kpi-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 10px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
         }
 
         .kpi-card {
             background: #1a2733;
             border: 1px solid #2a3f52;
             border-radius: 6px;
-            padding: 10px 12px;
+            padding: 6px 10px;
             text-align: center;
         }
 
@@ -222,7 +241,7 @@
         }
 
         .kpi-value {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: #ffffff;
             margin-bottom: 2px;
@@ -240,15 +259,20 @@
         .chart-row {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex: 1;
+            min-height: 0;
         }
 
         .chart-container {
             background: #1a2733;
             border: 1px solid #2a3f52;
             border-radius: 6px;
-            padding: 12px 15px;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .chart-title {
@@ -263,6 +287,12 @@
         .chart-inner {
             position: relative;
             height: 160px;
+        }
+
+        #overview .chart-inner {
+            flex: 1;
+            min-height: 0;
+            height: auto;
         }
 
         table {
@@ -1437,7 +1467,10 @@
 
             // Show/hide filter bar (only on overview)
             var filterBar = document.getElementById('overviewFilterBar');
-            if (filterBar) filterBar.style.display = (tabName === 'overview') ? '' : 'none';
+            if (filterBar) {
+                if (tabName === 'overview') filterBar.classList.add('active');
+                else filterBar.classList.remove('active');
+            }
 
             // Show/hide order summary footer (only on orderComposer)
             var orderSummary = document.querySelector('.order-summary');
@@ -1703,13 +1736,56 @@
 
             if (chartModals[chartId]) chartModals[chartId].destroy();
 
+            // Show overlay first so canvas gets dimensions
+            overlay.classList.add('active');
+
             setTimeout(() => {
                 const ctx = canvas.getContext('2d');
-                const config = JSON.parse(JSON.stringify(originalChart.config));
-                config.options.maintainAspectRatio = false;
-                chartModals[chartId] = new Chart(ctx, config);
-                overlay.classList.add('active');
-            }, 50);
+
+                // Deep clone data properly (JSON.stringify fails on Chart.js config)
+                const clonedDatasets = originalChart.data.datasets.map(ds => {
+                    const clone = {};
+                    Object.keys(ds).forEach(key => {
+                        if (Array.isArray(ds[key])) clone[key] = [...ds[key]];
+                        else if (typeof ds[key] !== 'function') clone[key] = ds[key];
+                    });
+                    return clone;
+                });
+
+                const clonedData = {
+                    labels: [...originalChart.data.labels],
+                    datasets: clonedDatasets
+                };
+
+                const chartType = originalChart.config.type;
+
+                const modalOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#e8e8e8', font: { size: 12 } } },
+                    },
+                    scales: {}
+                };
+
+                // Copy scale config if it exists
+                if (originalChart.config.options && originalChart.config.options.scales) {
+                    const origScales = originalChart.config.options.scales;
+                    Object.keys(origScales).forEach(key => {
+                        modalOptions.scales[key] = {};
+                        if (origScales[key].stacked) modalOptions.scales[key].stacked = origScales[key].stacked;
+                        if (origScales[key].position) modalOptions.scales[key].position = origScales[key].position;
+                        modalOptions.scales[key].grid = { color: 'rgba(42, 63, 82, 0.3)' };
+                        modalOptions.scales[key].ticks = { color: '#8899aa', font: { size: 11 } };
+                    });
+                }
+
+                chartModals[chartId] = new Chart(ctx, {
+                    type: chartType,
+                    data: clonedData,
+                    options: modalOptions
+                });
+            }, 100);
 
             document.addEventListener('keydown', handleModalKeydown);
         }
