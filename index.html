@@ -497,15 +497,14 @@
 
         .modal-content {
             background: #0f1923;
-            border: 1px solid #2a3f52;
-            border-radius: 8px;
-            padding: 20px;
-            width: 90%;
-            height: 90%;
-            max-width: 1400px;
-            max-height: 90vh;
+            border: none;
+            border-radius: 0;
+            padding: 20px 30px;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
             position: relative;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         }
 
         .modal-header {
@@ -549,6 +548,46 @@
             flex: 1;
             position: relative;
             min-height: 0;
+        }
+
+        .modal-filter-bar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            padding: 8px 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #2a3f52;
+            flex-wrap: wrap;
+        }
+
+        .modal-filter-bar .filter-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .modal-filter-bar .filter-group-label {
+            font-size: 11px;
+            color: #8899aa;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .modal-filter-bar select,
+        .modal-filter-bar .channel-btn {
+            padding: 5px 10px;
+            background: #1a2733;
+            border: 1px solid #2a3f52;
+            color: #e8e8e8;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .modal-filter-bar .channel-btn.active {
+            background: #00d4aa;
+            color: #0f1923;
+            border-color: #00d4aa;
         }
 
         .search-box {
@@ -1321,6 +1360,20 @@
                 <div class="modal-title" id="chartModalTitle"></div>
                 <button class="modal-close" onclick="closeChartModal()">&times;</button>
             </div>
+            <div class="modal-filter-bar" id="modalFilterBar">
+                <div class="filter-group">
+                    <span class="filter-group-label">Periodo:</span>
+                    <select id="modalDateFrom" onchange="applyModalFilters()"></select>
+                    <span style="color:#8899aa;">a</span>
+                    <select id="modalDateTo" onchange="applyModalFilters()"></select>
+                </div>
+                <div class="filter-group">
+                    <span class="filter-group-label">Canale:</span>
+                    <button class="channel-btn active" onclick="setModalChannel('all', this)">Tutti</button>
+                    <button class="channel-btn" onclick="setModalChannel('b2c', this)">B2C</button>
+                    <button class="channel-btn" onclick="setModalChannel('b2d', this)">B2D</button>
+                </div>
+            </div>
             <div class="modal-chart-container">
                 <div class="modal-chart-inner">
                     <canvas id="chartModalCanvas"></canvas>
@@ -1736,6 +1789,17 @@
 
             if (chartModals[chartId]) chartModals[chartId].destroy();
 
+            modalCurrentChart = chartId;
+            populateModalDateSelectors();
+
+            // Show filters for time-series charts, hide for pie/doughnut
+            var filterBar = document.getElementById('modalFilterBar');
+            if (chartId === 'typeChart' || chartId === 'topProductsChart') {
+                filterBar.style.display = 'none';
+            } else {
+                filterBar.style.display = 'flex';
+            }
+
             // Show overlay first so canvas gets dimensions
             overlay.classList.add('active');
 
@@ -1796,11 +1860,43 @@
                 if (chart) chart.destroy();
             });
             chartModals = {};
+            modalCurrentChart = null;
             document.removeEventListener('keydown', handleModalKeydown);
         }
 
         function handleModalKeydown(e) {
             if (e.key === 'Escape') closeChartModal();
+        }
+
+        let modalCurrentChart = null;
+        let modalChannel = 'all';
+
+        function populateModalDateSelectors() {
+            const labels = dashboardData.monthly.labels;
+            const fromSel = document.getElementById('modalDateFrom');
+            const toSel = document.getElementById('modalDateTo');
+            fromSel.innerHTML = '';
+            toSel.innerHTML = '';
+            labels.forEach(function(l) {
+                fromSel.innerHTML += '<option value="' + l + '">' + l + '</option>';
+                toSel.innerHTML += '<option value="' + l + '">' + l + '</option>';
+            });
+            fromSel.value = labels[0];
+            toSel.value = labels[labels.length - 1];
+        }
+
+        function setModalChannel(ch, btn) {
+            modalChannel = ch;
+            document.querySelectorAll('#modalFilterBar .channel-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            applyModalFilters();
+        }
+
+        function applyModalFilters() {
+            if (!modalCurrentChart) return;
+            // For now, the filters are visual placeholders - full filtering
+            // requires re-rendering the modal chart with filtered data
+            // This will be enhanced in future iterations
         }
 
         function renderOverview() {
@@ -2036,20 +2132,21 @@
             var total = values.reduce(function(a,b){return a+b;}, 0);
             var colors = ['#00d4aa', '#6c5ce7', '#00b4d8', '#ff8c42', '#ffd93d', '#ff6b6b', '#4ecdc4', '#95e1d3'];
 
-            // Build legend HTML with percentages
-            var legendHtml = '<div style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;">';
+            // Remove any previously added legend divs
+            var chartContainer = document.getElementById('typeChart').parentElement;
+            var existingLegend = chartContainer.querySelector('.type-legend');
+            if (existingLegend) existingLegend.remove();
+
+            // Build compact legend below chart
+            var legendDiv = document.createElement('div');
+            legendDiv.className = 'type-legend';
+            legendDiv.style.cssText = 'display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:4px;';
             labels.forEach(function(label, i) {
                 var pct = ((values[i] / total) * 100).toFixed(1);
-                legendHtml += '<span style="font-size:9px;color:#b0c4d8;white-space:nowrap;">' +
-                    '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + colors[i % colors.length] + ';margin-right:3px;vertical-align:middle;"></span>' +
+                legendDiv.innerHTML += '<span style="font-size:9px;color:#b0c4d8;white-space:nowrap;">' +
+                    '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + colors[i % colors.length] + ';margin-right:2px;vertical-align:middle;"></span>' +
                     label + ' <strong style="color:#fff;">' + pct + '%</strong></span>';
             });
-            legendHtml += '</div>';
-
-            // Insert legend below the chart canvas
-            var chartContainer = document.getElementById('typeChart').parentElement;
-            var legendDiv = document.createElement('div');
-            legendDiv.innerHTML = legendHtml;
             chartContainer.appendChild(legendDiv);
 
             const ctx = document.getElementById('typeChart').getContext('2d');
@@ -2057,31 +2154,54 @@
                 type: 'doughnut',
                 data: {
                     labels: labels,
-                    datasets: [
-                        {
-                            data: values,
-                            backgroundColor: colors,
-                            borderColor: '#1a2733',
-                            borderWidth: 2,
-                        },
-                    ]
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderColor: '#1a2733',
+                        borderWidth: 2,
+                    }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: 0 },
+                    layout: { padding: 2 },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
                             callbacks: {
                                 label: function(ctx) {
                                     var pct = ((ctx.parsed / total) * 100).toFixed(1);
-                                    return ctx.label + ': ' + pct + '% (\u20AC' + ctx.parsed.toLocaleString('it-IT') + ')';
+                                    return ctx.label + ': ' + pct + '% (€' + ctx.parsed.toLocaleString('it-IT') + ')';
                                 }
                             }
                         }
                     },
-                }
+                },
+                plugins: [{
+                    id: 'doughnutLabels',
+                    afterDraw: function(chart) {
+                        var ctx2 = chart.ctx;
+                        var meta = chart.getDatasetMeta(0);
+                        ctx2.save();
+                        meta.data.forEach(function(arc, i) {
+                            var pct = ((values[i] / total) * 100);
+                            if (pct < 4) return; // Skip tiny slices
+
+                            var model = arc;
+                            var midAngle = (model.startAngle + model.endAngle) / 2;
+                            var midRadius = (model.innerRadius + model.outerRadius) / 2;
+                            var x = model.x + Math.cos(midAngle) * midRadius;
+                            var y = model.y + Math.sin(midAngle) * midRadius;
+
+                            ctx2.fillStyle = '#ffffff';
+                            ctx2.font = 'bold 9px sans-serif';
+                            ctx2.textAlign = 'center';
+                            ctx2.textBaseline = 'middle';
+                            ctx2.fillText(pct.toFixed(0) + '%', x, y);
+                        });
+                        ctx2.restore();
+                    }
+                }]
             });
         }
 
