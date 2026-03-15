@@ -863,11 +863,15 @@
             background: #1a2733;
             border-top: 2px solid #2a3f52;
             padding: 12px 30px;
-            display: grid;
+            display: none;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 12px;
             box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
             z-index: 100;
+        }
+
+        .order-summary.visible {
+            display: grid;
         }
 
         .summary-item {
@@ -1412,7 +1416,7 @@
             renderSalesTable();
             renderImports();
             renderScotTable();
-            renderForecastTab();
+            // Forecast tab rendered lazily on first visit (Chart.js hidden tab issue)
             // Check connection health after rendering
             setTimeout(checkConnections, 300);
         }
@@ -1423,6 +1427,7 @@
         }
 
         // Tab switching
+        let forecastRendered = false;
         function switchTab(tabName, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
@@ -1431,12 +1436,28 @@
             if (btn) btn.classList.add('active');
             else if (event && event.target) event.target.classList.add('active');
 
-            // Resize charts when switching to tabs with hidden charts
+            // Show/hide filter bar (only on overview)
+            var filterBar = document.getElementById('overviewFilterBar');
+            if (filterBar) filterBar.style.display = (tabName === 'overview') ? '' : 'none';
+
+            // Show/hide order summary footer (only on orderComposer)
+            var orderSummary = document.querySelector('.order-summary');
+            if (orderSummary) {
+                if (tabName === 'orderComposer') orderSummary.classList.add('visible');
+                else orderSummary.classList.remove('visible');
+            }
+
+            // Lazy-render forecast charts on first visit
             if (tabName === 'forecast') {
-                setTimeout(function() {
-                    if (charts.revenueProj) charts.revenueProj.resize();
-                    if (charts.ordersProj) charts.ordersProj.resize();
-                }, 50);
+                if (!forecastRendered) {
+                    forecastRendered = true;
+                    setTimeout(function() { renderForecastTab(); }, 50);
+                } else {
+                    setTimeout(function() {
+                        if (charts.revenueProj) charts.revenueProj.resize();
+                        if (charts.ordersProj) charts.ordersProj.resize();
+                    }, 50);
+                }
             } else if (tabName === 'overview') {
                 setTimeout(function() {
                     Object.values(charts).forEach(function(c) { if (c && c.resize) c.resize(); });
