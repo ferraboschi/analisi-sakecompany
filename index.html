@@ -2446,11 +2446,199 @@
         }
 
         // ===== FORECAST TAB =====
+        function renderRevenueProjection() {
+            const data = dashboardData;
+            const labels = data.monthly.labels;
+            const revenue = data.monthly.revenue;
+            const forecast = data.forecast_revenue;
+
+            const lastIdx = labels.length - 1;
+            const showFrom = Math.max(0, lastIdx - 12);
+            const displayLabels = labels.slice(showFrom);
+            const displayRevenue = revenue.slice(showFrom);
+
+            const lastLabel = labels[lastIdx];
+            const parts = lastLabel.split('-');
+            const nextLabels = [];
+            let y = parseInt(parts[0]), m = parseInt(parts[1]);
+            for (let i = 0; i < 6; i++) {
+                m++;
+                if (m > 12) { m = 1; y++; }
+                nextLabels.push(y + '-' + String(m).padStart(2, '0'));
+            }
+
+            const allLabels = [...displayLabels, ...nextLabels];
+
+            const ctx = document.getElementById('revenueProjectionChart').getContext('2d');
+            charts['revenueProj'] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: allLabels,
+                    datasets: [
+                        {
+                            label: 'Actual Revenue',
+                            data: displayRevenue.concat(new Array(6).fill(null)),
+                            borderColor: '#00d4aa',
+                            backgroundColor: 'rgba(0, 212, 170, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true,
+                            pointRadius: 3,
+                        },
+                        {
+                            label: 'Forecasted Revenue',
+                            data: new Array(displayRevenue.length).fill(null).concat(forecast.forecast),
+                            borderColor: 'rgba(108, 92, 231, 0.7)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.3,
+                            pointRadius: 3,
+                        },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: 'rgba(42, 63, 82, 0.3)' } },
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#e8e8e8', font: { size: 11 } } },
+                    },
+                }
+            });
+        }
+
+        function renderOrdersProjection() {
+            const data = dashboardData;
+            const labels = data.monthly.labels;
+            const orders = data.monthly.orders;
+            const trend = data.trend_orders;
+
+            const lastIdx = labels.length - 1;
+            const showFrom = Math.max(0, lastIdx - 12);
+            const displayLabels = labels.slice(showFrom);
+            const displayOrders = orders.slice(showFrom);
+
+            const lastLabel = labels[lastIdx];
+            const parts = lastLabel.split('-');
+            const nextLabels = [];
+            let y2 = parseInt(parts[0]), m2 = parseInt(parts[1]);
+            for (let i = 0; i < 3; i++) {
+                m2++;
+                if (m2 > 12) { m2 = 1; y2++; }
+                nextLabels.push(y2 + '-' + String(m2).padStart(2, '0'));
+            }
+
+            const allLabels = [...displayLabels, ...nextLabels];
+
+            const ctx = document.getElementById('ordersProjectionChart').getContext('2d');
+            charts['ordersProj'] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: allLabels,
+                    datasets: [
+                        {
+                            label: 'Actual Orders',
+                            data: displayOrders.concat(new Array(3).fill(null)),
+                            borderColor: '#00b4d8',
+                            backgroundColor: 'rgba(0, 180, 216, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true,
+                            pointRadius: 3,
+                        },
+                        {
+                            label: 'Forecasted Orders',
+                            data: new Array(displayOrders.length).fill(null).concat(trend.future_trend),
+                            borderColor: 'rgba(255, 141, 66, 0.7)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.3,
+                            pointRadius: 3,
+                        },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: 'rgba(42, 63, 82, 0.3)' } },
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#e8e8e8', font: { size: 11 } } },
+                    },
+                }
+            });
+        }
+
+        function renderDepletionForecast() {
+            const forecast = dashboardData.forecast_depletion;
+            const tbody = document.getElementById('depletionBody');
+            tbody.innerHTML = forecast.map(item => `
+                <tr>
+                    <td><strong>${item.sku}</strong></td>
+                    <td>${item.name}</td>
+                    <td>${formatNum(item.stock, 0)}</td>
+                    <td>${formatNum(item.avg_monthly, 1)}</td>
+                    <td>${item.days_remaining}</td>
+                    <td>${item.depletion_date}</td>
+                    <td style="color: #00d4aa; font-weight: 600;">${item.incoming}</td>
+                    <td>${item.days_after}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateForecastKPI() {
+            const forecast = dashboardData.forecast_revenue;
+            const avgMonthly = forecast.forecast_avg;
+            const annualProj = avgMonthly * 12;
+            document.getElementById('projectedMonthlyRev').textContent = '€' + formatNum(avgMonthly, 0);
+            document.getElementById('projectedAnnual2026').textContent = '€' + formatNum(annualProj, 0);
+        }
+
         function renderForecastTab() {
             renderRevenueProjection();
             renderOrdersProjection();
             renderDepletionForecast();
             updateForecastKPI();
+        }
+
+        // ===== PRODUCT MODAL =====
+        function showProductModal(sku) {
+            const product = dashboardData.products.find(p => p.sku === sku);
+            if (!product) return;
+
+            const html = `
+                <h2>${product.name}</h2>
+                <div style="margin-top: 15px;">
+                    <div style="margin-bottom: 10px;"><strong>SKU:</strong> ${product.sku}</div>
+                    <div style="margin-bottom: 10px;"><strong>Type:</strong> ${product.type}</div>
+                    <div style="margin-bottom: 10px;"><strong>Price:</strong> €${formatNum(product.price, 2)}</div>
+                    <div style="margin-bottom: 10px;"><strong>Current Stock:</strong> ${product.stock}</div>
+                    <div style="margin-bottom: 10px;"><strong>Avg Monthly:</strong> ${formatNum(product.avg_monthly, 1)}</div>
+                    <div style="margin-bottom: 10px;"><strong>Total Revenue:</strong> €${formatNum(product.total_revenue, 0)}</div>
+                    <div style="margin-bottom: 10px;"><strong>B2C Sales:</strong> ${product.b2c} units / €${formatNum(product.b2c_rev, 0)}</div>
+                    <div style="margin-bottom: 10px;"><strong>B2D Sales:</strong> ${product.b2d} units / €${formatNum(product.b2d_rev, 0)}</div>
+                    <div style="margin-bottom: 10px;"><strong>Coverage:</strong> ${formatNum(product.coverage_months, 1)} months</div>
+                    <div style="margin-bottom: 10px;"><strong>Incoming Total:</strong> ${product.incoming_total}</div>
+                    <div style="margin-bottom: 10px; padding-top: 10px; border-top: 1px solid #2a3f52;">
+                        <strong>Status:</strong> <span class="status-badge status-${product.status}">${getStatusLabel(product)}</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalBody').innerHTML = html;
+            document.getElementById('productModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
+
+        window.onclick = function(e) {
+            const modal = document.getElementById('productModal');
+            if (e.target === modal) modal.style.display = 'none';
         }
 
         // ===== ORDER COMPOSER FUNCTIONS =====
