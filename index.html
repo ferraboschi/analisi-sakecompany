@@ -1693,14 +1693,14 @@
 
         function detectIntent(q) {
             q = q.toLowerCase();
-            if (/\b(stock|giacenz|a terra|merce|scorte|disponibil|magazzin|quant[aoe]\s+(merce|ne)\s+(ho|abbiamo|hai|c'è|ce)|inventari)\b/.test(q)) return 'STOCK';
-            if (/\b(arriv|container|spedizion|transito|prossim.*(?:container|arriv|spediz)|quando.*arriv|eta|in viaggio|nave|preparazion)\b/.test(q)) return 'ARRIVAL';
-            if (/\b(vendut|vendite|fatturato|revenue|incasso|ricav|quanto.*vendut|guadagn)\b/.test(q)) return 'SALES';
-            if (/\b(client|chi\s+compr|compra|acquist|chi.*compr)\b/.test(q)) return 'CUSTOMERS';
-            if (/\b(copertura|quanti\s+mesi|dura|bastano|sufficien|fin[io]sce|esauris)\b/.test(q)) return 'COVERAGE';
-            if (/\b(esaurit|critic|bass[oai]|manca|mancant|da\s+ordinar|alert|attenzione|problema|rischio)\b/.test(q)) return 'STATUS';
-            if (/\b(top|miglior|più\s+vendut|classifica|ranking|best)\b/.test(q)) return 'TOP';
-            if (/\b(total|panoramica|riepilog|sommari|dashboard|general)\b/.test(q)) return 'OVERVIEW';
+            if (/(stock|giacenz|a terra|merce|scorte|disponibil|magazzin|inventari)/i.test(q) || /quant[aoe]\s+(merce|ne)\s+(ho|abbiamo|hai)/i.test(q)) return 'STOCK';
+            if (/(arriv|container|spedizion|transito|in viaggio|nave|preparazion)/i.test(q) || /prossim.*(container|arriv|spediz)/i.test(q) || /quando.*arriv/i.test(q)) return 'ARRIVAL';
+            if (/(vendut|vendite|fatturato|revenue|incasso|ricav|guadagn)/i.test(q) || /quanto.*vendut/i.test(q)) return 'SALES';
+            if (/(client|acquist)/i.test(q) || /chi.*(compr|acquist)/i.test(q)) return 'CUSTOMERS';
+            if (/(copertura|quanti\s+mesi|bastano|sufficien)/i.test(q) || /fin[io]sc/i.test(q)) return 'COVERAGE';
+            if (/(esaurit|critic|mancant|alert|attenzione|problema|rischio)/i.test(q) || /bass[oai]/i.test(q) || /cosa\s+manca/i.test(q) || /da\s+ordinar/i.test(q)) return 'STATUS';
+            if (/(top\b|miglior|classifica|ranking|best)/i.test(q) || /più\s+vendut/i.test(q)) return 'TOP';
+            if (/(panoramica|riepilog|sommari|dashboard|general)/i.test(q)) return 'OVERVIEW';
             return 'PRODUCT';
         }
 
