@@ -1702,6 +1702,7 @@
             if (/(copertura|quanti\s+mesi|bastano|sufficien)/i.test(q) || /fin[io]sc/i.test(q)) return 'COVERAGE';
             if (/(esaurit|critic|mancant|alert|attenzione|problema|rischio)/i.test(q) || /bass[oai]/i.test(q) || /cosa\s+manca/i.test(q) || /da\s+ordinar/i.test(q)) return 'STATUS';
             if (/(panoramica|riepilog|sommari|dashboard|general)/i.test(q)) return 'OVERVIEW';
+            if (/(media|trend|andamento|ordin[ie]|mensil|mese|mesi|cresci|calat|diminui|aument|ultim[io])/i.test(q) || /quant[ie]\s+ordin/i.test(q) || /come\s+(vanno|va|andiamo)/i.test(q)) return 'STATS';
             return 'PRODUCT';
         }
 
@@ -1721,9 +1722,119 @@
             '</div>';
         }
 
+        // Claude API configuration - set your Cloudflare Worker URL here
+        var CLAUDE_API_ENDPOINT = ''; // e.g. 'https://sake-ai-proxy.YOUR-SUBDOMAIN.workers.dev'
+
+        function buildClaudeContext() {
+            var kpi = dashboardData.kpi || {};
+            var prods = dashboardData.products || [];
+            var imports = dashboardData.imports || [];
+            var monthly = dashboardData.monthly || {};
+            // Build compact context
+            var ctx = 'SAKE COMPANY DASHBOARD DATA (aggiornato al ' + (kpi.stock_date || 'oggi') + '):\n\n';
+            ctx += 'KPI: ' + (kpi.orders_2026_ytd || 0) + ' ordini 2026 YTD (€' + Math.round(kpi.revenue_2026_ytd || 0) + '), ';
+            ctx += (kpi.orders_2025 || 0) + ' ordini 2025 (€' + Math.round(kpi.revenue_2025 || 0) + '), ';
+            ctx += prods.length + ' prodotti, ' + (kpi.stock_live || 0) + ' pezzi a terra\n\n';
+            // Monthly data (last 12)
+            var labels = monthly.labels || [];
+            var orders = monthly.orders || [];
+            var revenue = monthly.revenue || [];
+            ctx += 'ORDINI MENSILI (ultimi 12 mesi):\n';
+            for (var i = Math.max(0, labels.length - 12); i < labels.length; i++) {
+                ctx += labels[i] + ': ' + orders[i] + ' ordini, €' + Math.round(revenue[i]) + '\n';
+            }
+            // Active imports
+            var active = imports.filter(function(i) { return i.status !== 'arrived'; });
+            if (active.length > 0) {
+                ctx += '\nSPEDIZIONI ATTIVE:\n';
+                active.forEach(function(imp) {
+                    var totalBtl = Object.values(imp.products || {}).reduce(function(s,v){return s+v;},0);
+                    ctx += imp.name + ' — ' + (imp.status === 'in_transit' ? 'In transito' : 'In preparazione') + ', ETA: ' + imp.eta + ', ' + totalBtl + ' bottiglie, ' + Object.keys(imp.products || {}).length + ' SKU\n';
+                });
+            }
+            // Products summary (top 50 by revenue + any mentioned)
+            var sorted = prods.slice().sort(function(a, b) { return (b.total_revenue || 0) - (a.total_revenue || 0); });
+            ctx += '\nPRODOTTI (top 50 per fatturato + critici):\n';
+            ctx += 'SKU | Nome | Stock | Copertura mesi | Venduto tot | Fatturato | Stato | In arrivo\n';
+            var shown = {};
+            var critici = prods.filter(function(p) { return p.status === 'esaurito' || p.status === 'critico'; });
+            var toShow = sorted.slice(0, 50);
+            critici.forEach(function(p) { if (!shown[p.sku]) toShow.push(p); });
+            toShow.forEach(function(p) {
+                if (shown[p.sku]) return;
+                shown[p.sku] = true;
+                ctx += p.sku + ' | ' + p.name + ' | ' + (p.stock || 0) + ' | ' + (p.coverage_months || 0).toFixed(1) + ' | ' + (p.total_sold || 0) + ' | €' + Math.round(p.total_revenue || 0) + ' | ' + (p.status || '-') + ' | ' + (p.incoming_total || 0) + '\n';
+            });
+            // Esauriti count
+            var esauriti = prods.filter(function(p) { return p.status === 'esaurito'; });
+            var bassi = prods.filter(function(p) { return p.status === 'basso'; });
+            ctx += '\nSTATUS: ' + esauriti.length + ' esauriti, ' + critici.length + ' critici, ' + bassi.length + ' bassi\n';
+            return ctx;
+        }
+
+        function callClaudeAPI(query, callback) {
+            if (!CLAUDE_API_ENDPOINT) { callback(null); return; }
+            var context = buildClaudeContext();
+            // Find relevant products for enriched context
+            var products = extractProductFromQuery(query);
+            if (products.length > 0 && products.length <= 5) {
+                context += '\nPRODOTTI RILEVANTI ALLA DOMANDA:\n';
+                products.forEach(function(p) {
+                    var cd = customerData[p.sku] || [];
+                    context += JSON.stringify({sku: p.sku, name: p.name, stock: p.stock, coverage: p.coverage_months, sold: p.total_sold, revenue: p.total_revenue, status: p.status, incoming: p.incoming_total, avg_monthly: p.avg_monthly, top_customers: cd.slice(0, 5).map(function(c) { return c.n + ' (qty:' + c.tq + ', €' + c.tr + ')'; })}) + '\n';
+                });
+            }
+            var systemPrompt = 'Sei l\'assistente AI della dashboard Sake Company. Rispondi SEMPRE in italiano. Sei esperto di sake giapponese e del business import/distribuzione.\n\nRispondi in modo conciso e diretto. Usa i dati forniti per dare risposte precise con numeri reali. Se non hai dati sufficienti, dillo.\n\nFormatta la risposta in HTML semplice (usa <strong>, <br>, <em>). Non usare markdown. Rispondi in massimo 3-4 righe quando possibile.';
+            fetch(CLAUDE_API_ENDPOINT, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    model: 'claude-sonnet-4-20250514',
+                    max_tokens: 512,
+                    system: systemPrompt + '\n\n' + context,
+                    messages: [{role: 'user', content: query}]
+                })
+            }).then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.content && data.content[0] && data.content[0].text) {
+                    callback(data.content[0].text);
+                } else {
+                    callback(null);
+                }
+            }).catch(function() { callback(null); });
+        }
+
         function runAIQuery() {
             var query = (document.getElementById('searchPromptInput').value || '').trim();
             if (!query) return;
+
+            // If Claude API is configured, try it first
+            if (CLAUDE_API_ENDPOINT) {
+                // Show loading
+                document.getElementById('productDetailContent').innerHTML = '<div style="text-align:center;padding:60px;"><div style="font-size:40px;margin-bottom:12px;">&#129302;</div><div style="color:#8899aa;">Sto pensando...</div></div>';
+                document.getElementById('productDetailModal').style.display = 'block';
+                callClaudeAPI(query, function(aiResponse) {
+                    if (aiResponse) {
+                        var html = aiAnswerBox('&#129302;', aiResponse);
+                        // Also show relevant product cards
+                        var products = extractProductFromQuery(query);
+                        if (products.length === 1) {
+                            html += buildProductCard(products[0]);
+                        } else if (products.length > 1 && products.length <= 15) {
+                            html += buildProductTable(products, query);
+                        }
+                        document.getElementById('productDetailContent').innerHTML = html;
+                    } else {
+                        // Fallback to rule-based engine
+                        runAIQueryLocal(query);
+                    }
+                });
+                return;
+            }
+            runAIQueryLocal(query);
+        }
+
+        function runAIQueryLocal(query) {
             var q = query.toLowerCase();
             var intent = detectIntent(q);
             var products = extractProductFromQuery(q);
@@ -2031,6 +2142,57 @@
                 html += aiCard('&#9888;', 'Esauriti', esauriti, 'prodotti', '#ff5252');
                 html += aiCard('&#128674;', 'Spedizioni', activeImports.length, 'attive', '#ff9500');
                 html += '</div>';
+            }
+
+            // ======= STATS / ORDERS INTENT =======
+            else if (intent === 'STATS') {
+                var labels = dashboardData.monthly.labels || [];
+                var orders = dashboardData.monthly.orders || [];
+                var revenue = dashboardData.monthly.revenue || [];
+                var len = labels.length;
+                // Last 6 complete months (exclude current partial month)
+                var isPartialMonth = true; // current month is always partial
+                var endIdx = isPartialMonth ? len - 1 : len;
+                var startIdx = Math.max(0, endIdx - 6);
+                var recentOrders = orders.slice(startIdx, endIdx);
+                var recentRevenue = revenue.slice(startIdx, endIdx);
+                var recentLabels = labels.slice(startIdx, endIdx);
+                var avgOrders = recentOrders.length > 0 ? Math.round(recentOrders.reduce(function(s,v){return s+v;},0) / recentOrders.length) : 0;
+                var avgRevenue = recentOrders.length > 0 ? Math.round(recentRevenue.reduce(function(s,v){return s+v;},0) / recentOrders.length) : 0;
+                // Trend: compare last 3 months avg vs previous 3
+                var last3 = orders.slice(Math.max(0, endIdx - 3), endIdx);
+                var prev3 = orders.slice(Math.max(0, endIdx - 6), Math.max(0, endIdx - 3));
+                var avgLast3 = last3.length > 0 ? last3.reduce(function(s,v){return s+v;},0) / last3.length : 0;
+                var avgPrev3 = prev3.length > 0 ? prev3.reduce(function(s,v){return s+v;},0) / prev3.length : 0;
+                var trendPct = avgPrev3 > 0 ? ((avgLast3 - avgPrev3) / avgPrev3 * 100) : 0;
+                var trendIcon = trendPct >= 0 ? '&#128200;' : '&#128201;';
+                var trendColor = trendPct >= 0 ? '#00d4aa' : '#ff5252';
+                var trendLabel = trendPct >= 0 ? '+' + trendPct.toFixed(1) + '%' : trendPct.toFixed(1) + '%';
+                // KPI data
+                var kpi = dashboardData.kpi || {};
+                var answer = '<strong>Media ordini ultimi 6 mesi</strong> (escluso mese corrente): <strong>' + avgOrders + ' ordini/mese</strong><br>';
+                answer += 'Fatturato medio: <strong>€' + formatNum(avgRevenue, 0) + '/mese</strong><br>';
+                answer += 'Trend ultimi 3 mesi vs 3 mesi precedenti: <strong style="color:' + trendColor + ';">' + trendLabel + '</strong><br>';
+                if (kpi.orders_2026_ytd) answer += '<br>2026 YTD: <strong>' + kpi.orders_2026_ytd + ' ordini</strong> (€' + formatNum(kpi.revenue_2026_ytd, 0) + ')<br>';
+                if (kpi.orders_2025) answer += '2025 totale: <strong>' + kpi.orders_2025 + ' ordini</strong> (€' + formatNum(kpi.revenue_2025, 0) + ')';
+                html = aiAnswerBox(trendIcon, answer);
+                // Monthly table
+                html += '<div style="margin-top:10px;max-height:350px;overflow-y:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">';
+                html += '<tr style="background:#1a2d3d;position:sticky;top:0;"><th style="padding:6px 8px;text-align:left;color:#8899aa;">Mese</th><th style="padding:6px 8px;text-align:right;color:#8899aa;">Ordini</th><th style="padding:6px 8px;text-align:right;color:#8899aa;">Fatturato</th><th style="padding:6px 8px;text-align:right;color:#8899aa;">vs Mese Prec.</th></tr>';
+                // Show last 12 months, most recent first
+                var showStart = Math.max(0, len - 12);
+                for (var mi = len - 1; mi >= showStart; mi--) {
+                    var monthChange = mi > 0 ? ((orders[mi] - orders[mi-1]) / (orders[mi-1] || 1) * 100) : 0;
+                    var chColor = monthChange >= 0 ? '#00d4aa' : '#ff5252';
+                    var chStr = (monthChange >= 0 ? '+' : '') + monthChange.toFixed(0) + '%';
+                    var isCurrent = mi === len - 1;
+                    html += '<tr style="border-bottom:1px solid #1a2d3d;' + (isCurrent ? 'opacity:0.6;' : '') + ((len - 1 - mi) % 2 ? 'background:#0d1520;' : '') + '">';
+                    html += '<td style="padding:5px 8px;color:#e8e8e8;">' + labels[mi] + (isCurrent ? ' <span style="font-size:10px;color:#8899aa;">(in corso)</span>' : '') + '</td>';
+                    html += '<td style="padding:5px 8px;text-align:right;color:#e8e8e8;font-weight:600;">' + orders[mi] + '</td>';
+                    html += '<td style="padding:5px 8px;text-align:right;color:#00d4aa;">€' + formatNum(revenue[mi], 0) + '</td>';
+                    html += '<td style="padding:5px 8px;text-align:right;color:' + chColor + ';">' + chStr + '</td></tr>';
+                }
+                html += '</table></div>';
             }
 
             // ======= PRODUCT / FALLBACK =======
