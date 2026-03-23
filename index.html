@@ -1080,6 +1080,24 @@
         </div>
     </div>
 
+    <!-- SEARCH PROMPT BAR -->
+    <div id="searchPromptBar" style="background:#131f2b;border-bottom:1px solid #2a3f52;padding:8px 30px;display:flex;align-items:center;gap:10px;">
+        <span style="color:#00d4aa;font-size:16px;flex-shrink:0;">&#128270;</span>
+        <input type="text" id="searchPromptInput" placeholder="Cerca un prodotto per SKU, nome o parola chiave... (es. 'Kodakara Yuzu', 'S039', 'daiginjo')"
+            style="flex:1;padding:9px 14px;background:#0f1923;border:1px solid #2a3f52;color:#e8e8e8;border-radius:6px;font-size:13px;outline:none;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='#00d4aa'" onblur="this.style.borderColor='#2a3f52'"
+            onkeydown="if(event.key==='Enter')runProductSearch()">
+        <button onclick="runProductSearch()" style="padding:8px 18px;background:linear-gradient(135deg,#00d4aa,#00b894);color:#0f1923;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;letter-spacing:0.3px;">CERCA</button>
+    </div>
+
+    <!-- PRODUCT DETAIL MODAL -->
+    <div id="productDetailModal" class="modal" style="z-index:1002;">
+        <div class="modal-content" style="max-width:900px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+            <span class="modal-close" onclick="document.getElementById('productDetailModal').style.display='none'">&times;</span>
+            <div id="productDetailContent" style="overflow-y:auto;flex:1;"></div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="tabs">
             <button class="tab-button active" onclick="switchTab('overview', this)">Overview</button>
@@ -1607,6 +1625,214 @@
             if (n === undefined || n === null || isNaN(n)) return '0%';
             var sign = n > 0 ? '+' : '';
             return sign + Number(n).toFixed(1) + '%';
+        }
+
+        // ===== PRODUCT SEARCH PROMPT =====
+        function runProductSearch() {
+            var query = (document.getElementById('searchPromptInput').value || '').trim().toLowerCase();
+            if (!query) return;
+
+            // Find matching products
+            var matches = dashboardData.products.filter(function(p) {
+                return p.sku.toLowerCase().indexOf(query) !== -1 ||
+                       p.name.toLowerCase().indexOf(query) !== -1 ||
+                       (p.vendor || '').toLowerCase().indexOf(query) !== -1 ||
+                       (p.type || '').toLowerCase().indexOf(query) !== -1;
+            });
+
+            // Also search supplierInfo name_jp
+            if (matches.length === 0) {
+                matches = dashboardData.products.filter(function(p) {
+                    var si = supplierInfo[p.sku] || {};
+                    return (si.name_jp || '').toLowerCase().indexOf(query) !== -1;
+                });
+            }
+
+            if (matches.length === 0) {
+                showProductDetailModal(null, query);
+            } else if (matches.length === 1) {
+                showProductDetailModal(matches[0], query);
+            } else {
+                // Multiple results — show list then allow click
+                showProductListModal(matches, query);
+            }
+        }
+
+        function showProductListModal(products, query) {
+            var html = '<h3 style="margin:0 0 12px 0;color:#fff;">Risultati per "<span style="color:#00d4aa;">' + escapeHtml(query) + '</span>" — ' + products.length + ' prodotti</h3>';
+            html += '<table style="width:100%;font-size:12px;"><thead><tr>' +
+                '<th style="text-align:left;padding:8px 6px;">SKU</th>' +
+                '<th style="text-align:left;padding:8px 6px;">Nome</th>' +
+                '<th style="text-align:right;padding:8px 6px;">Stock</th>' +
+                '<th style="text-align:right;padding:8px 6px;">Venduto</th>' +
+                '<th style="text-align:right;padding:8px 6px;">Fatturato</th>' +
+                '<th style="text-align:left;padding:8px 6px;">Stato</th>' +
+                '</tr></thead><tbody>';
+            products.forEach(function(p) {
+                var statusColor = p.status === 'esaurito' ? '#ff5252' : p.status === 'critico' ? '#ff9800' : p.status === 'basso' ? '#ffd600' : '#00d4aa';
+                html += '<tr onclick="showProductDetailModal(dashboardData.products.find(function(x){return x.sku===\'' + p.sku + '\'}),\'' + escapeHtml(query) + '\')" style="cursor:pointer;border-bottom:1px solid #1e3045;" onmouseover="this.style.background=\'rgba(0,212,170,0.06)\'" onmouseout="this.style.background=\'none\'">' +
+                    '<td style="padding:8px 6px;color:#00d4aa;font-weight:600;">' + p.sku + '</td>' +
+                    '<td style="padding:8px 6px;">' + p.name + '</td>' +
+                    '<td style="text-align:right;padding:8px 6px;">' + (p.stock || 0) + '</td>' +
+                    '<td style="text-align:right;padding:8px 6px;">' + (p.total_sold || 0) + '</td>' +
+                    '<td style="text-align:right;padding:8px 6px;">€' + formatNum(p.total_revenue || 0, 0) + '</td>' +
+                    '<td style="padding:8px 6px;color:' + statusColor + ';">' + (p.status || '-') + '</td>' +
+                '</tr>';
+            });
+            html += '</tbody></table>';
+            document.getElementById('productDetailContent').innerHTML = html;
+            document.getElementById('productDetailModal').style.display = 'block';
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function showProductDetailModal(product, query) {
+            if (!product) {
+                document.getElementById('productDetailContent').innerHTML =
+                    '<div style="text-align:center;padding:40px;color:#8899aa;">' +
+                    '<div style="font-size:40px;margin-bottom:12px;">&#128269;</div>' +
+                    '<h3 style="color:#fff;margin-bottom:8px;">Nessun risultato per "' + escapeHtml(query) + '"</h3>' +
+                    '<p>Prova con uno SKU (es. S039-0720) o un nome prodotto (es. Kodakara)</p></div>';
+                document.getElementById('productDetailModal').style.display = 'block';
+                return;
+            }
+
+            var p = product;
+            var si = supplierInfo[p.sku] || {};
+            var cd = customerData[p.sku] || [];
+            var ys = skuYearlySales[p.sku] || {};
+
+            // Status styling
+            var statusColor = p.status === 'esaurito' ? '#ff5252' : p.status === 'critico' ? '#ff9800' : p.status === 'basso' ? '#ffd600' : '#00d4aa';
+            var statusIcon = p.status === 'esaurito' ? '&#9888;' : p.status === 'critico' ? '&#9888;' : p.status === 'basso' ? '&#9888;' : '&#10003;';
+
+            // Yearly sales breakdown
+            var yearsHtml = '';
+            var yearKeys = Object.keys(ys).sort();
+            yearKeys.forEach(function(yr) {
+                yearsHtml += '<div style="background:#0f1923;border-radius:6px;padding:10px 14px;text-align:center;min-width:100px;">' +
+                    '<div style="font-size:11px;color:#8899aa;">' + yr + '</div>' +
+                    '<div style="font-size:16px;font-weight:700;color:#fff;">' + ys[yr][0] + ' <span style="font-size:10px;color:#8899aa;">pz</span></div>' +
+                    '<div style="font-size:11px;color:#00d4aa;">€' + formatNum(ys[yr][1], 0) + '</div>' +
+                '</div>';
+            });
+
+            // Top 10 customers
+            var custHtml = '';
+            var topCust = cd.slice(0, 10);
+            if (topCust.length > 0) {
+                custHtml = '<table style="width:100%;font-size:11px;margin-top:8px;"><thead><tr>' +
+                    '<th style="text-align:left;padding:6px;">Cliente</th>' +
+                    '<th style="text-align:left;padding:6px;">P.IVA</th>' +
+                    '<th style="text-align:right;padding:6px;">Qty</th>' +
+                    '<th style="text-align:right;padding:6px;">Fatturato</th>' +
+                    '</tr></thead><tbody>';
+                topCust.forEach(function(c, i) {
+                    custHtml += '<tr style="border-bottom:1px solid #1e3045;">' +
+                        '<td style="padding:5px 6px;">' + (i+1) + '. ' + c.n + '</td>' +
+                        '<td style="padding:5px 6px;color:#8899aa;font-family:monospace;font-size:10px;">' + (c.p || '-') + '</td>' +
+                        '<td style="text-align:right;padding:5px 6px;font-weight:600;">' + c.tq + '</td>' +
+                        '<td style="text-align:right;padding:5px 6px;">€' + formatNum(c.tr, 0) + '</td>' +
+                    '</tr>';
+                });
+                custHtml += '</tbody></table>';
+                if (cd.length > 10) custHtml += '<div style="text-align:center;color:#8899aa;font-size:11px;margin-top:6px;">... e altri ' + (cd.length - 10) + ' clienti</div>';
+            } else {
+                custHtml = '<div style="color:#8899aa;font-size:12px;padding:10px;">Nessun dato cliente disponibile</div>';
+            }
+
+            // B2C vs B2D split
+            var totalSalesQty = (p.b2c || 0) + (p.b2d || 0);
+            var totalSalesRev = (p.b2c_rev || 0) + (p.b2d_rev || 0);
+            var b2cPct = totalSalesQty > 0 ? ((p.b2c || 0) / totalSalesQty * 100).toFixed(1) : 0;
+            var b2dPct = totalSalesQty > 0 ? ((p.b2d || 0) / totalSalesQty * 100).toFixed(1) : 0;
+
+            // Build HTML
+            var html = '';
+
+            // HEADER
+            html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px;">';
+            html += '<div>';
+            html += '<h2 style="margin:0;color:#fff;font-size:18px;">' + p.name + '</h2>';
+            html += '<div style="display:flex;gap:12px;align-items:center;margin-top:4px;flex-wrap:wrap;">';
+            html += '<span style="color:#00d4aa;font-weight:700;font-size:14px;">' + p.sku + '</span>';
+            if (si.name_jp) html += '<span style="color:#8899aa;font-size:12px;">' + si.name_jp + '</span>';
+            if (p.vendor) html += '<span style="background:#1e3045;padding:2px 8px;border-radius:10px;font-size:10px;color:#b0c4d8;">' + p.vendor + '</span>';
+            if (p.type) html += '<span style="background:#1e3045;padding:2px 8px;border-radius:10px;font-size:10px;color:#b0c4d8;">' + p.type + '</span>';
+            html += '</div></div>';
+            html += '<div style="text-align:right;">';
+            html += '<div style="color:' + statusColor + ';font-weight:700;font-size:14px;">' + statusIcon + ' ' + (p.status || 'N/A').toUpperCase() + '</div>';
+            html += '<div style="font-size:11px;color:#8899aa;">Prezzo: €' + formatNum(p.price || 0, 2) + '</div>';
+            html += '</div></div>';
+
+            // KPI CARDS ROW
+            html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:16px;">';
+            var kpis = [
+                {label: 'Stock', value: p.stock || 0, sub: '', color: (p.stock||0) > 0 ? '#fff' : '#ff5252'},
+                {label: 'Copertura', value: (p.coverage_months||0).toFixed(1) + ' mesi', sub: '', color: (p.coverage_months||0) > 3 ? '#00d4aa' : (p.coverage_months||0) > 1 ? '#ffd600' : '#ff5252'},
+                {label: 'Media Mensile', value: Math.round(p.avg_monthly || 0), sub: 'pz/mese', color: '#fff'},
+                {label: 'Totale Venduto', value: formatNum(p.total_sold || 0, 0), sub: 'pezzi', color: '#fff'},
+                {label: 'Fatturato Totale', value: '€' + formatNum(p.total_revenue || 0, 0), sub: '', color: '#00d4aa'},
+                {label: 'In Arrivo', value: p.incoming_total || 0, sub: 'pezzi', color: (p.incoming_total||0) > 0 ? '#4fc3f7' : '#8899aa'}
+            ];
+            kpis.forEach(function(k) {
+                html += '<div style="background:#0f1923;border-radius:6px;padding:10px 12px;text-align:center;">' +
+                    '<div style="font-size:10px;color:#8899aa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">' + k.label + '</div>' +
+                    '<div style="font-size:16px;font-weight:700;color:' + k.color + ';">' + k.value + '</div>' +
+                    (k.sub ? '<div style="font-size:9px;color:#556677;">' + k.sub + '</div>' : '') +
+                '</div>';
+            });
+            html += '</div>';
+
+            // TWO COLUMNS: Sales breakdown + Yearly sales
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
+
+            // B2C vs B2D
+            html += '<div style="background:#0f1923;border-radius:8px;padding:12px;">';
+            html += '<div style="font-size:11px;color:#8899aa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Canale di vendita</div>';
+            html += '<div style="display:flex;gap:16px;">';
+            html += '<div style="flex:1;text-align:center;"><div style="font-size:10px;color:#00b4d8;">B2C</div><div style="font-size:18px;font-weight:700;color:#00b4d8;">' + (p.b2c||0) + '</div><div style="font-size:10px;color:#8899aa;">€' + formatNum(p.b2c_rev||0,0) + ' (' + b2cPct + '%)</div></div>';
+            html += '<div style="flex:1;text-align:center;"><div style="font-size:10px;color:#6c5ce7;">B2D</div><div style="font-size:18px;font-weight:700;color:#6c5ce7;">' + (p.b2d||0) + '</div><div style="font-size:10px;color:#8899aa;">€' + formatNum(p.b2d_rev||0,0) + ' (' + b2dPct + '%)</div></div>';
+            html += '</div>';
+            // Bar
+            html += '<div style="margin-top:8px;height:6px;background:#1e3045;border-radius:3px;overflow:hidden;display:flex;">';
+            if (totalSalesQty > 0) {
+                html += '<div style="width:' + b2cPct + '%;background:#00b4d8;"></div>';
+                html += '<div style="width:' + b2dPct + '%;background:#6c5ce7;"></div>';
+            }
+            html += '</div></div>';
+
+            // Yearly breakdown
+            html += '<div style="background:#0f1923;border-radius:8px;padding:12px;">';
+            html += '<div style="font-size:11px;color:#8899aa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Vendite per anno</div>';
+            html += '<div style="display:flex;gap:6px;flex-wrap:wrap;">' + (yearsHtml || '<span style="color:#556677;">Nessun dato</span>') + '</div>';
+            html += '</div>';
+
+            html += '</div>';
+
+            // SUPPLIER INFO (if available)
+            if (si.bottles_per_case || si.price_jpy || si.weight_kg || si.alcohol_pct) {
+                html += '<div style="background:#0f1923;border-radius:8px;padding:12px;margin-bottom:16px;">';
+                html += '<div style="font-size:11px;color:#8899aa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Info Fornitore / 仕入先</div>';
+                html += '<div style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px;">';
+                if (si.bottles_per_case) html += '<span><span style="color:#8899aa;">Bottiglie/cassa:</span> <strong>' + si.bottles_per_case + '</strong></span>';
+                if (si.volume_ml) html += '<span><span style="color:#8899aa;">Volume:</span> <strong>' + si.volume_ml + 'ml</strong></span>';
+                if (si.price_jpy) html += '<span><span style="color:#8899aa;">Prezzo JPY:</span> <strong>¥' + formatNum(si.price_jpy,0) + '</strong></span>';
+                if (si.weight_kg) html += '<span><span style="color:#8899aa;">Peso:</span> <strong>' + si.weight_kg + 'kg</strong></span>';
+                if (si.alcohol_pct) html += '<span><span style="color:#8899aa;">Alcol:</span> <strong>' + si.alcohol_pct + '%</strong></span>';
+                html += '</div></div>';
+            }
+
+            // TOP CUSTOMERS
+            html += '<div style="background:#0f1923;border-radius:8px;padding:12px;">';
+            html += '<div style="font-size:11px;color:#8899aa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Top Clienti (' + cd.length + ' totali)</div>';
+            html += custHtml;
+            html += '</div>';
+
+            document.getElementById('productDetailContent').innerHTML = html;
+            document.getElementById('productDetailModal').style.display = 'block';
         }
 
         // ===== COLUMN SORTING =====
