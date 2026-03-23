@@ -1694,6 +1694,7 @@
         function detectIntent(q) {
             q = q.toLowerCase();
             if (/(top\b|miglior|classifica|ranking|best)/i.test(q) || /più\s+vendut/i.test(q) || (/top/i.test(q) && /(vendut|fatturato|prodott)/i.test(q))) return 'TOP';
+            if (/stock.*(bass|critic|esaurit|alert)/i.test(q) || /(bass|critic|esaurit).*(stock|scorte)/i.test(q)) return 'STATUS';
             if (/(stock|giacenz|a terra|merce|scorte|disponibil|magazzin|inventari)/i.test(q) || /quant[aoe]\s+(merce|ne)\s+(ho|abbiamo|hai)/i.test(q)) return 'STOCK';
             if (/(arriv|container|spedizion|transito|in viaggio|nave|preparazion)/i.test(q) || /prossim.*(container|arriv|spediz)/i.test(q) || /quando.*arriv/i.test(q)) return 'ARRIVAL';
             if (/(vendut|vendite|fatturato|revenue|incasso|ricav|guadagn)/i.test(q) || /quanto.*vendut/i.test(q)) return 'SALES';
