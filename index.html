@@ -1760,6 +1760,31 @@
                     }
                     html = aiAnswerBox('&#128674;', answer);
                     html += buildProductCard(p);
+                } else if (products.length > 1 && products.length <= 10) {
+                    // Multiple product match - show arrivals for all matched products
+                    var allArrivals = [];
+                    products.forEach(function(p) {
+                        imports.forEach(function(imp) {
+                            if (imp.products && imp.products[p.sku]) {
+                                if (imp.status !== 'arrived') {
+                                    allArrivals.push({product: p.name, sku: p.sku, name: imp.name, eta: imp.eta, status: imp.status, qty: imp.products[p.sku]});
+                                }
+                            }
+                        });
+                    });
+                    var prodNames = products.slice(0, 5).map(function(p) { return p.name; }).join(', ');
+                    var answer = '';
+                    if (allArrivals.length > 0) {
+                        answer = 'Spedizioni in arrivo per <strong>' + products.length + ' prodotti</strong> (' + prodNames + '):<br><br>';
+                        allArrivals.forEach(function(a) {
+                            var statusLabel = a.status === 'in_transit' ? '&#128674; In transito' : '&#128230; In preparazione';
+                            answer += '<strong>' + a.product + '</strong> (' + a.sku + '): ' + statusLabel + ' — <strong>' + a.qty + ' pezzi</strong>, ETA <strong>' + a.eta + '</strong> (' + a.name + ')<br>';
+                        });
+                    } else {
+                        answer = 'Nessuna spedizione attiva trovata per <strong>' + prodNames + '</strong>.';
+                    }
+                    html = aiAnswerBox('&#128674;', answer);
+                    html += buildProductTable(products, query);
                 } else {
                     // General arrival question
                     var answer = '';
@@ -1854,17 +1879,74 @@
 
             // ======= CUSTOMERS INTENT =======
             else if (intent === 'CUSTOMERS') {
-                if (products.length === 1) {
-                    var p = products[0];
-                    var cd = customerData[p.sku] || [];
-                    var answer = '<strong>' + p.name + '</strong> (' + p.sku + ') è acquistato da <strong>' + cd.length + ' clienti</strong>.';
-                    if (cd.length > 0) {
-                        answer += '<br>Top cliente: <strong>' + cd[0].n + '</strong> con ' + cd[0].tq + ' pezzi (€' + formatNum(cd[0].tr, 0) + ').';
+                if (products.length >= 1 && products.length <= 10) {
+                    // Aggregate customers across matched products
+                    var custMap = {};
+                    products.forEach(function(p) {
+                        var cd = customerData[p.sku] || [];
+                        cd.forEach(function(c) {
+                            var key = c.p || c.n; // group by P.IVA or name
+                            if (!custMap[key]) { custMap[key] = {n: c.n, p: c.p || '', tq: 0, tr: 0, to: 0, skus: []}; }
+                            custMap[key].tq += c.tq || 0;
+                            custMap[key].tr += c.tr || 0;
+                            custMap[key].to += c.to || 0;
+                            if (custMap[key].skus.indexOf(p.sku) === -1) custMap[key].skus.push(p.sku);
+                        });
+                    });
+                    var custList = Object.values(custMap).sort(function(a, b) { return b.tr - a.tr; });
+                    if (products.length === 1) {
+                        var p = products[0];
+                        var answer = '<strong>' + p.name + '</strong> (' + p.sku + ') è acquistato da <strong>' + custList.length + ' clienti</strong>.';
+                        if (custList.length > 0) answer += '<br>Top cliente: <strong>' + custList[0].n + '</strong> con ' + custList[0].tq + ' pezzi (€' + formatNum(custList[0].tr, 0) + ').';
+                        html = aiAnswerBox('&#128101;', answer);
+                        html += buildProductCard(p);
+                    } else {
+                        var prodNames = products.slice(0, 5).map(function(p) { return p.name; }).join(', ');
+                        var answer = 'Ho trovato <strong>' + products.length + ' prodotti</strong> (' + prodNames + '). In totale <strong>' + custList.length + ' clienti unici</strong>.';
+                        if (custList.length > 0) answer += '<br>Top cliente: <strong>' + custList[0].n + '</strong> (€' + formatNum(custList[0].tr, 0) + ').';
+                        html = aiAnswerBox('&#128101;', answer);
+                        // Show customer table
+                        html += '<div style="max-height:400px;overflow-y:auto;margin-top:10px;"><table style="width:100%;border-collapse:collapse;font-size:12px;">';
+                        html += '<tr style="background:#1a2d3d;position:sticky;top:0;"><th style="padding:6px 8px;text-align:left;color:#8899aa;">Cliente</th><th style="padding:6px 8px;text-align:left;color:#8899aa;">P.IVA</th><th style="padding:6px 8px;text-align:right;color:#8899aa;">Qty</th><th style="padding:6px 8px;text-align:right;color:#8899aa;">Fatturato</th><th style="padding:6px 8px;text-align:right;color:#8899aa;">Ordini</th></tr>';
+                        custList.slice(0, 30).forEach(function(c, i) {
+                            html += '<tr style="border-bottom:1px solid #1a2d3d;' + (i % 2 ? 'background:#0d1520;' : '') + '">';
+                            html += '<td style="padding:5px 8px;color:#e8e8e8;">' + c.n + '</td>';
+                            html += '<td style="padding:5px 8px;color:#8899aa;font-size:11px;">' + (c.p || '-') + '</td>';
+                            html += '<td style="padding:5px 8px;text-align:right;color:#e8e8e8;">' + c.tq + '</td>';
+                            html += '<td style="padding:5px 8px;text-align:right;color:#00d4aa;">€' + formatNum(c.tr, 0) + '</td>';
+                            html += '<td style="padding:5px 8px;text-align:right;color:#e8e8e8;">' + c.to + '</td></tr>';
+                        });
+                        html += '</table></div>';
+                        html += '<div style="margin-top:10px;">' + buildProductTable(products, query) + '</div>';
                     }
-                    html = aiAnswerBox('&#128101;', answer);
-                    html += buildProductCard(p);
+                } else if (products.length > 10) {
+                    html = aiAnswerBox('&#128101;', 'Ho trovato <strong>' + products.length + ' prodotti</strong>. Prova a specificare meglio, es. <em>"Chi compra Kodakara Yuzu 720ml?"</em>');
+                    html += buildProductTable(products.slice(0, 15), query);
                 } else {
-                    html = aiAnswerBox('&#128101;', 'Specifica un prodotto per vedere i clienti. Esempio: <em>"Chi compra Kodakara Yuzu?"</em>');
+                    // No product specified — show top customers overall
+                    var allCustMap = {};
+                    Object.keys(customerData).forEach(function(sku) {
+                        customerData[sku].forEach(function(c) {
+                            var key = c.p || c.n;
+                            if (!allCustMap[key]) { allCustMap[key] = {n: c.n, p: c.p || '', tq: 0, tr: 0, to: 0}; }
+                            allCustMap[key].tq += c.tq || 0;
+                            allCustMap[key].tr += c.tr || 0;
+                            allCustMap[key].to += c.to || 0;
+                        });
+                    });
+                    var topCust = Object.values(allCustMap).sort(function(a, b) { return b.tr - a.tr; });
+                    html = aiAnswerBox('&#128101;', 'Ecco i <strong>top 20 clienti</strong> per fatturato complessivo:');
+                    html += '<div style="max-height:400px;overflow-y:auto;margin-top:10px;"><table style="width:100%;border-collapse:collapse;font-size:12px;">';
+                    html += '<tr style="background:#1a2d3d;position:sticky;top:0;"><th style="padding:6px 8px;text-align:left;color:#8899aa;">Cliente</th><th style="padding:6px 8px;text-align:left;color:#8899aa;">P.IVA</th><th style="padding:6px 8px;text-align:right;color:#8899aa;">Qty</th><th style="padding:6px 8px;text-align:right;color:#8899aa;">Fatturato</th><th style="padding:6px 8px;text-align:right;color:#8899aa;">Ordini</th></tr>';
+                    topCust.slice(0, 20).forEach(function(c, i) {
+                        html += '<tr style="border-bottom:1px solid #1a2d3d;' + (i % 2 ? 'background:#0d1520;' : '') + '">';
+                        html += '<td style="padding:5px 8px;color:#e8e8e8;">' + c.n + '</td>';
+                        html += '<td style="padding:5px 8px;color:#8899aa;font-size:11px;">' + (c.p || '-') + '</td>';
+                        html += '<td style="padding:5px 8px;text-align:right;color:#e8e8e8;">' + c.tq + '</td>';
+                        html += '<td style="padding:5px 8px;text-align:right;color:#00d4aa;">€' + formatNum(c.tr, 0) + '</td>';
+                        html += '<td style="padding:5px 8px;text-align:right;color:#e8e8e8;">' + c.to + '</td></tr>';
+                    });
+                    html += '</table></div>';
                 }
             }
 
