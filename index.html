@@ -1644,25 +1644,50 @@
         }
 
         function extractProductFromQuery(q) {
-            // Try to find a product reference in the query
-            // First try exact SKU match
-            var skuMatch = q.match(/[A-Z]\d{2,3}-\d{4}/i) || q.match(/[SBA]\d{2,3}/i);
+            // First try exact SKU match (e.g. S039-0720 or S039)
+            var skuMatch = q.match(/[A-Z]\d{2,3}-\d{4}/i) || q.match(/\b[SBA]\d{2,3}\b/i);
             if (skuMatch) {
                 var found = findProducts(skuMatch[0]);
                 if (found.length > 0) return found;
             }
-            // Remove common question words to isolate product name
-            var cleaned = q.replace(/\b(quant[aoe]|quanto|merce|stock|giacenza|scorte|a terra|ho di|hai di|abbiamo di|c'è di|ce di|vendite|venduto|fatturato|arriva|arrivo|copertura|clienti|chi compra|prodott[oi]|del|della|dei|delle|il|lo|la|i|gli|le|un|uno|una|per|con|nel|nella|in|di|da|è|sono|quando|dove|come|cosa)\b/gi, '').trim();
-            if (cleaned.length >= 2) {
-                var found = findProducts(cleaned);
-                if (found.length > 0) return found;
-                // Try each word individually
-                var words = cleaned.split(/\s+/).filter(function(w) { return w.length >= 3; });
-                for (var i = 0; i < words.length; i++) {
-                    found = findProducts(words[i]);
-                    if (found.length > 0 && found.length <= 20) return found;
+            // Remove common Italian question/filler words to isolate the product name
+            var stopwords = /\b(quant[aoe]|quanto|merce|stock|giacenz[ae]|scorte|a\s+terra|ho\s+di|hai\s+di|abbiamo\s+di|c'è\s+di|ce\s+di|vendite|venduto|fatturato|arriva|arrivo|arrivano|prossim[oai]|container|spedizion[ei]|copertura|clienti|chi\s+compra|prodott[oi]|del|della|dei|delle|il|lo|la|i|gli|le|un|uno|una|per|con|nel|nella|in|di|da|è|e|sono|quando|dove|come|cosa|mi|ci|si|ne|che|più|top|miglior[ei]?|esaurit[oai]|critic[oai]|bass[oai]|manca|cosa)\b/gi;
+            var cleaned = q.replace(stopwords, ' ').replace(/[?!.,;:'"]/g, '').replace(/\s+/g, ' ').trim();
+            if (cleaned.length < 2) return [];
+
+            // Strategy: try progressively shorter substrings from the cleaned text
+            // 1. Full cleaned phrase
+            var found = findProducts(cleaned);
+            if (found.length > 0 && found.length <= 5) return found;
+
+            // 2. If too many results, try to narrow down: combine words in sliding window
+            var words = cleaned.split(/\s+/).filter(function(w) { return w.length >= 2; });
+            if (words.length >= 2) {
+                // Try longest combinations first (all words, then n-1, etc.)
+                for (var windowSize = words.length; windowSize >= 2; windowSize--) {
+                    for (var start = 0; start <= words.length - windowSize; start++) {
+                        var phrase = words.slice(start, start + windowSize).join(' ');
+                        found = findProducts(phrase);
+                        if (found.length > 0 && found.length <= 5) return found;
+                    }
                 }
             }
+
+            // 3. Single word fallback (prefer fewer matches)
+            var bestMatch = [];
+            for (var i = 0; i < words.length; i++) {
+                if (words[i].length < 3) continue;
+                found = findProducts(words[i]);
+                if (found.length > 0 && (bestMatch.length === 0 || found.length < bestMatch.length)) {
+                    bestMatch = found;
+                }
+            }
+            if (bestMatch.length > 0 && bestMatch.length <= 30) return bestMatch;
+
+            // 4. If full cleaned text matched many, return those
+            found = findProducts(cleaned);
+            if (found.length > 0) return found;
+
             return [];
         }
 
