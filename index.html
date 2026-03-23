@@ -855,19 +855,63 @@
                 font-size: 10px;
             }
 
-            /* --- CHARTS --- */
-            .chart-container {
-                padding: 10px 12px;
-            }
-            .chart-inner {
-                height: 180px;
-            }
-            .chart-title {
-                font-size: 11px;
-            }
+            /* --- CHARTS: hide canvas, show tap-to-view --- */
             .chart-row {
+                display: grid;
+                grid-template-columns: 1fr;
                 gap: 8px;
                 margin-bottom: 8px;
+            }
+            .chart-container {
+                padding: 14px 16px;
+                cursor: pointer;
+                position: relative;
+            }
+            .chart-container::after {
+                content: 'Tocca per il grafico ›';
+                position: absolute;
+                bottom: 10px;
+                right: 14px;
+                font-size: 10px;
+                color: #556677;
+                font-weight: 500;
+            }
+            .chart-inner {
+                height: 0;
+                overflow: hidden;
+                opacity: 0;
+            }
+            .chart-title {
+                font-size: 12px;
+                margin-bottom: 0;
+            }
+            .chart-title-row {
+                margin-bottom: 0;
+            }
+            .expand-icon {
+                display: none !important;
+            }
+            /* Mobile summary data shown via JS */
+            .mobile-chart-summary {
+                margin-top: 8px;
+                display: flex;
+                gap: 12px;
+                flex-wrap: wrap;
+            }
+            .mobile-chart-summary .mcs-item {
+                display: flex;
+                flex-direction: column;
+            }
+            .mobile-chart-summary .mcs-value {
+                font-size: 16px;
+                font-weight: 600;
+                color: #ffffff;
+                letter-spacing: -0.3px;
+            }
+            .mobile-chart-summary .mcs-label {
+                font-size: 10px;
+                color: #556677;
+                margin-top: 1px;
             }
             #overview.active {
                 height: auto;
@@ -2738,6 +2782,77 @@
         } else {
             initDashboard();
         }
+
+        // === MOBILE CHART ENHANCEMENTS ===
+        function setupMobileCharts() {
+            if (window.innerWidth > 480) return;
+            var data = dashboardData;
+            var monthly = data.monthly || {};
+            var labels = monthly.labels || [];
+            var orders = monthly.orders || [];
+            var revenue = monthly.revenue || [];
+            var len = labels.length;
+
+            // Summary data for each chart
+            var summaries = {
+                'trendChart': function() {
+                    var last3 = orders.slice(Math.max(0, len-4), len-1);
+                    var avg = last3.length ? Math.round(last3.reduce(function(s,v){return s+v},0)/last3.length) : 0;
+                    var lastRev = len > 1 ? revenue[len-2] : 0;
+                    return '<div class="mcs-item"><span class="mcs-value">' + avg + '</span><span class="mcs-label">media ordini/mese</span></div>' +
+                           '<div class="mcs-item"><span class="mcs-value">€' + Math.round(lastRev).toLocaleString('it') + '</span><span class="mcs-label">ultimo mese</span></div>' +
+                           '<div class="mcs-item"><span class="mcs-value">' + (len > 1 ? labels[len-2] : '-') + '</span><span class="mcs-label">periodo</span></div>';
+                },
+                'channelChart': function() {
+                    var ch = data.channel_split || {};
+                    return '<div class="mcs-item"><span class="mcs-value">' + Math.round((ch.b2c_pct || 0)) + '%</span><span class="mcs-label">B2C</span></div>' +
+                           '<div class="mcs-item"><span class="mcs-value">' + Math.round((ch.b2d_pct || 0)) + '%</span><span class="mcs-label">B2D</span></div>' +
+                           '<div class="mcs-item"><span class="mcs-value">€' + Math.round((ch.b2c_revenue || 0)).toLocaleString('it') + '</span><span class="mcs-label">revenue B2C</span></div>';
+                },
+                'topProductsChart': function() {
+                    var top = (data.top_products || []).slice(0, 3);
+                    return top.map(function(p, i) {
+                        return '<div class="mcs-item" style="width:100%;"><span class="mcs-value" style="font-size:13px;">' + (i+1) + '. ' + (p.name || p.sku) + '</span><span class="mcs-label">€' + Math.round(p.revenue || 0).toLocaleString('it') + '</span></div>';
+                    }).join('');
+                },
+                'typeChart': function() {
+                    var types = data.revenue_by_type || {};
+                    var items = Object.keys(types).sort(function(a,b){return types[b]-types[a]}).slice(0,4);
+                    return items.map(function(t) {
+                        return '<div class="mcs-item"><span class="mcs-value" style="font-size:13px;">' + t + '</span><span class="mcs-label">€' + Math.round(types[t]).toLocaleString('it') + '</span></div>';
+                    }).join('');
+                }
+            };
+
+            // Insert summaries and make charts tappable
+            document.querySelectorAll('.chart-container').forEach(function(container) {
+                var canvas = container.querySelector('canvas');
+                if (!canvas) return;
+                var chartId = canvas.id;
+                var titleEl = container.querySelector('.chart-title');
+                var title = titleEl ? titleEl.textContent : '';
+
+                // Add summary
+                if (summaries[chartId]) {
+                    var existing = container.querySelector('.mobile-chart-summary');
+                    if (!existing) {
+                        var sumDiv = document.createElement('div');
+                        sumDiv.className = 'mobile-chart-summary';
+                        sumDiv.innerHTML = summaries[chartId]();
+                        container.querySelector('.chart-title-row').after(sumDiv);
+                    }
+                }
+
+                // Make tappable → open full-screen chart modal
+                container.onclick = function() {
+                    openChartModal(chartId, title);
+                };
+            });
+        }
+
+        // Run after charts are initialized
+        setTimeout(setupMobileCharts, 500);
+        window.addEventListener('resize', function() { setTimeout(setupMobileCharts, 200); });
 
         // Tab switching
 
