@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- v6.4-responsive -->
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -23,10 +22,8 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #1a2733 0%, #0f1923 100%);
-            padding: 12px 30px;
-            border-bottom: 1px solid #2a3f52;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            background: #0f1923;
+            padding: 14px 30px 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -37,20 +34,21 @@
         }
 
         .header h1 {
-            font-size: 20px;
+            font-size: 17px;
             font-weight: 600;
             color: #ffffff;
-            margin-bottom: 2px;
+            letter-spacing: -0.3px;
         }
 
         .header-meta {
             font-size: 11px;
-            color: #8899aa;
+            color: #556677;
+            margin-top: 1px;
         }
 
         .conn-status {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
             flex-shrink: 0;
         }
@@ -58,60 +56,55 @@
         .conn-badge {
             display: flex;
             align-items: center;
-            gap: 5px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid #2a3f52;
-            border-radius: 6px;
-            padding: 5px 10px;
+            gap: 4px;
+            background: transparent;
+            border: none;
+            padding: 0;
             font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
             text-transform: uppercase;
-            color: #8899aa;
+            color: #556677;
             transition: all 0.3s ease;
             cursor: default;
             position: relative;
         }
 
         .conn-badge .conn-dot {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             flex-shrink: 0;
             transition: all 0.3s ease;
         }
 
         .conn-badge.ok {
-            border-color: rgba(0,212,170,0.3);
-            color: #b0c4d8;
+            color: #556677;
         }
 
         .conn-badge.ok .conn-dot {
             background: #00d4aa;
-            box-shadow: 0 0 6px rgba(0,212,170,0.5);
+            box-shadow: 0 0 4px rgba(0,212,170,0.4);
         }
 
         .conn-badge.error {
-            border-color: rgba(255,82,82,0.4);
             color: #ff8a80;
-            background: rgba(255,82,82,0.06);
         }
 
         .conn-badge.error .conn-dot {
             background: #ff5252;
-            box-shadow: 0 0 8px rgba(255,82,82,0.6);
+            box-shadow: 0 0 6px rgba(255,82,82,0.5);
             animation: pulse-red 1.5s infinite;
         }
 
         .conn-badge.checking .conn-dot {
             background: #ffc107;
-            box-shadow: 0 0 6px rgba(255,193,7,0.4);
+            box-shadow: 0 0 4px rgba(255,193,7,0.3);
             animation: pulse-yellow 1s infinite;
         }
 
         .conn-badge.checking {
-            border-color: rgba(255,193,7,0.3);
-            color: #8899aa;
+            color: #556677;
         }
 
         @keyframes pulse-red {
@@ -151,37 +144,37 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 10px 30px 20px;
+            padding: 0 30px 20px;
         }
 
         .tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 12px;
-            border-bottom: 2px solid #2a3f52;
+            gap: 0;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(42,63,82,0.5);
             flex-wrap: wrap;
         }
 
         .tab-button {
-            padding: 12px 20px;
+            padding: 10px 16px;
             background: none;
             border: none;
-            color: #8899aa;
+            color: #556677;
             cursor: pointer;
             font-size: 13px;
             font-weight: 500;
             border-bottom: 2px solid transparent;
-            margin-bottom: -2px;
+            margin-bottom: -1px;
             transition: all 0.2s;
         }
 
         .tab-button:hover {
-            color: #00d4aa;
+            color: #e8e8e8;
         }
 
         .tab-button.active {
-            color: #00d4aa;
-            border-bottom-color: #00d4aa;
+            color: #ffffff;
+            border-bottom-color: #635bff;
         }
 
         .tab-content {
@@ -219,38 +212,45 @@
         .kpi-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 8px;
-            margin-bottom: 8px;
+            gap: 10px;
+            margin-bottom: 14px;
             flex-shrink: 0;
         }
 
         .kpi-card {
-            background: #1a2733;
-            border: 1px solid #2a3f52;
-            border-radius: 6px;
-            padding: 6px 10px;
-            text-align: center;
+            background: #141e2a;
+            border: 1px solid rgba(42,63,82,0.4);
+            border-radius: 8px;
+            padding: 12px 14px;
+            text-align: left;
+            transition: border-color 0.2s;
+        }
+
+        .kpi-card:hover {
+            border-color: rgba(42,63,82,0.8);
         }
 
         .kpi-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            color: #8899aa;
-            margin-bottom: 4px;
-            letter-spacing: 0.5px;
-            font-weight: 600;
+            font-size: 11px;
+            text-transform: none;
+            color: #556677;
+            margin-bottom: 6px;
+            letter-spacing: 0;
+            font-weight: 500;
         }
 
         .kpi-value {
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 20px;
+            font-weight: 600;
             color: #ffffff;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
+            letter-spacing: -0.5px;
         }
 
         .kpi-delta {
-            font-size: 10px;
+            font-size: 11px;
             color: #00d4aa;
+            font-weight: 500;
         }
 
         .kpi-delta.negative {
@@ -260,29 +260,34 @@
         .chart-row {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-bottom: 8px;
+            gap: 10px;
+            margin-bottom: 10px;
             flex: 1;
             min-height: 0;
         }
 
         .chart-container {
-            background: #1a2733;
-            border: 1px solid #2a3f52;
-            border-radius: 6px;
-            padding: 8px 12px;
+            background: #141e2a;
+            border: 1px solid rgba(42,63,82,0.4);
+            border-radius: 8px;
+            padding: 14px 16px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .chart-container:hover {
+            border-color: rgba(42,63,82,0.8);
         }
 
         .chart-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: #ffffff;
-            margin-bottom: 8px;
+            font-size: 12px;
+            text-transform: none;
+            color: #8899aa;
+            margin-bottom: 10px;
             font-weight: 600;
-            letter-spacing: 0.5px;
+            letter-spacing: 0;
         }
 
         .chart-inner {
@@ -299,32 +304,33 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 11px;
-            background: #1a2733;
+            font-size: 12px;
+            background: transparent;
         }
 
         thead {
-            background: #0f1923;
+            background: transparent;
         }
 
         th {
-            padding: 10px 8px;
+            padding: 8px 10px;
             text-align: left;
-            color: #ffffff;
-            font-weight: 600;
-            border-bottom: 1px solid #2a3f52;
+            color: #556677;
+            font-weight: 500;
+            border-bottom: 1px solid rgba(42,63,82,0.5);
             text-transform: uppercase;
             font-size: 10px;
+            letter-spacing: 0.3px;
         }
 
         td {
-            padding: 8px;
-            border-bottom: 1px solid #2a3f52;
-            color: #e8e8e8;
+            padding: 9px 10px;
+            border-bottom: 1px solid rgba(42,63,82,0.25);
+            color: #c8d0d8;
         }
 
         tr:hover {
-            background: #243541;
+            background: rgba(99,91,255,0.04);
         }
 
         .status-badge {
@@ -337,13 +343,13 @@
             white-space: nowrap;
         }
 
-        .status-esaurito { background: #ff6b6b; color: #0f1923; }
-        .status-critico { background: #ff8c42; color: #0f1923; }
-        .status-basso { background: #ffd93d; color: #0f1923; }
-        .status-medio { background: #00b4d8; color: #0f1923; }
-        .status-ok { background: #00d4aa; color: #0f1923; }
-        .status-nuovo { background: #6c5ce7; color: #ffffff; }
-        .status-old { background: #555; color: #e8e8e8; }
+        .status-esaurito { background: rgba(255,107,107,0.15); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.2); }
+        .status-critico { background: rgba(255,140,66,0.15); color: #ff8c42; border: 1px solid rgba(255,140,66,0.2); }
+        .status-basso { background: rgba(255,217,61,0.12); color: #ffd93d; border: 1px solid rgba(255,217,61,0.2); }
+        .status-medio { background: rgba(0,180,216,0.12); color: #00b4d8; border: 1px solid rgba(0,180,216,0.2); }
+        .status-ok { background: rgba(0,212,170,0.12); color: #00d4aa; border: 1px solid rgba(0,212,170,0.2); }
+        .status-nuovo { background: rgba(99,91,255,0.15); color: #a09aff; border: 1px solid rgba(99,91,255,0.2); }
+        .status-old { background: rgba(85,85,85,0.2); color: #8899aa; border: 1px solid rgba(85,85,85,0.3); }
 
         .stock-cell {
             font-weight: 600;
@@ -408,11 +414,11 @@
 
         .overview-filter-bar {
             display: none;
-            gap: 15px;
+            gap: 12px;
             align-items: center;
-            padding: 5px 0;
-            margin-bottom: 6px;
-            border-bottom: 1px solid #2a3f52;
+            padding: 6px 0 8px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(42,63,82,0.3);
             flex-wrap: wrap;
         }
 
@@ -934,19 +940,21 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(5,10,18,0.8);
+            backdrop-filter: blur(4px);
         }
 
         .modal-content {
-            background: #1a2733;
-            margin: 10% auto;
-            padding: 20px;
-            border: 1px solid #2a3f52;
+            background: #141e2a;
+            margin: 6% auto;
+            padding: 24px;
+            border: 1px solid rgba(42,63,82,0.5);
             width: 80%;
             max-width: 600px;
-            border-radius: 6px;
-            max-height: 80vh;
+            border-radius: 12px;
+            max-height: 85vh;
             overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         }
 
         .modal-close {
@@ -1334,18 +1342,20 @@
     </div>
 
     <!-- AI SEARCH PROMPT BAR -->
-    <div id="searchPromptBar" style="background:#131f2b;border-bottom:1px solid #2a3f52;padding:8px 30px;display:flex;align-items:center;gap:10px;">
-        <span style="color:#00d4aa;font-size:18px;flex-shrink:0;">&#9889;</span>
-        <input type="text" id="searchPromptInput" placeholder="Chiedimi qualcosa... es. &quot;Quanta merce ho di Kodakara Yuzu?&quot;, &quot;Quando arriva il prossimo container?&quot;, &quot;Prodotti esauriti&quot;"
-            style="flex:1;padding:9px 14px;background:#0f1923;border:1px solid #2a3f52;color:#e8e8e8;border-radius:6px;font-size:13px;outline:none;transition:border-color 0.2s;"
-            onfocus="this.style.borderColor='#00d4aa'" onblur="this.style.borderColor='#2a3f52'"
-            onkeydown="if(event.key==='Enter')runAIQuery()">
-        <button onclick="runAIQuery()" style="padding:8px 18px;background:linear-gradient(135deg,#00d4aa,#00b894);color:#0f1923;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;letter-spacing:0.3px;">CHIEDI</button>
+    <div id="searchPromptBar" style="background:#0f1923;padding:10px 30px 6px;display:flex;align-items:center;gap:8px;max-width:1460px;margin:0 auto;">
+        <div style="flex:1;position:relative;">
+            <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#556677;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="searchPromptInput" placeholder="Chiedi qualcosa... es. &quot;Quanta merce ho di Kodakara Yuzu?&quot;, &quot;Prodotti esauriti&quot;, &quot;Media ordini&quot;"
+                style="width:100%;padding:9px 14px 9px 38px;background:#141e2a;border:1px solid rgba(42,63,82,0.5);color:#e8e8e8;border-radius:8px;font-size:13px;outline:none;transition:all 0.2s;"
+                onfocus="this.style.borderColor='#635bff';this.style.boxShadow='0 0 0 3px rgba(99,91,255,0.15)'" onblur="this.style.borderColor='rgba(42,63,82,0.5)';this.style.boxShadow='none'"
+                onkeydown="if(event.key==='Enter')runAIQuery()">
+        </div>
+        <button onclick="runAIQuery()" style="padding:9px 20px;background:#635bff;color:#ffffff;border:none;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;white-space:nowrap;letter-spacing:0.2px;transition:background 0.2s;" onmouseover="this.style.background='#5147e5'" onmouseout="this.style.background='#635bff'">Chiedi</button>
     </div>
 
     <!-- PRODUCT DETAIL MODAL -->
     <div id="productDetailModal" class="modal" style="z-index:1002;">
-        <div class="modal-content" style="max-width:900px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+        <div class="modal-content" style="max-width:920px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;">
             <span class="modal-close" onclick="document.getElementById('productDetailModal').style.display='none'">&times;</span>
             <div id="productDetailContent" style="overflow-y:auto;flex:1;"></div>
         </div>
